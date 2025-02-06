@@ -1,0 +1,1 @@
+export { useMonsterFloat } from '@/float';

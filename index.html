@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Vite App</title>
+    <style>
+        .top-buttons {
+            display: flex;
+            top: 15px;
+            left: 50%;
+            position: absolute;
+            transform: translateX(-50%);
+        }
+
+        .bottom-buttons {
+            display: flex;
+            bottom: 15px;
+            left: 50%;
+            position: absolute;
+            transform: translateX(-50%);
+        }
+
+        .right-buttons {
+            top: 50%;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            transform: translateY(-50%);
+        }
+
+        .left-buttons {
+            top: 50%;
+            left: 15px;
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            transform: translateY(-50%);
+        }
+
+        .button {
+            width: 16px;
+            height: 16px;
+            border: 2px solid black;
+            border-radius: 50%;
+        }
+
+        .button_active {
+            background-color: black;
+        }
+
+        .top-buttons > .button:not(:first-child),
+        .bottom-buttons > .button:not(:first-child) {
+            margin-left: 40px;
+        }
+
+        .right-buttons > .button:not(:first-child),
+        .left-buttons > .button:not(:first-child) {
+            margin-top: 40px;
+        }
+
+        .placement {
+            width: 550px;
+            height: 400px;
+            /*overflow: scroll;*/
+            position: relative;
+            border: 1px solid black;
+        }
+
+        .placement-wrapper {
+            /*width: 1000px;*/
+            /*height: 1000px;*/
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .placement-reference {
+            width: 96px;
+            height: 96px;
+            border: 2px dashed black;
+            display: flex;
+            position: relative;
+            font-weight: bold;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .placement-popup {
+            top: 0;
+            left: 0;
+            color: white;
+            height: 36px;
+            display: flex;
+            font-weight: bold;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            background-color: #007bff;
+        }
+
+        .placement-popup_top,
+        .placement-popup_right,
+        .placement-popup_bottom,
+        .placement-popup_left {
+            min-width: 70px;
+        }
+
+        .placement-popup_top-start,
+        .placement-popup_top-end,
+        .placement-popup_bottom-start,
+        .placement-popup_bottom-end {
+            min-width: 150px;
+        }
+
+        .placement-popup_right-start,
+        .placement-popup_right-end,
+        .placement-popup_left-start,
+        .placement-popup_left-end {
+            min-width: 100px;
+        }
+    </style>
+</head>
+<body>
+<div class='placement'>
+    <div class="top-buttons">
+        <div id="top-start" class="button"></div>
+        <div id="top" class="button"></div>
+        <div id="top-end" class="button"></div>
+    </div>
+    <div class="right-buttons">
+        <div id="right-start" class="button"></div>
+        <div id="right" class="button"></div>
+        <div id="right-end" class="button"></div>
+    </div>
+    <div class="bottom-buttons">
+        <div id="bottom-start" class="button"></div>
+        <div id="bottom" class="button"></div>
+        <div id="bottom-end" class="button"></div>
+    </div>
+    <div class="left-buttons">
+        <div id="left-start" class="button"></div>
+        <div id="left" class="button"></div>
+        <div id="left-end" class="button"></div>
+    </div>
+    <div class='placement-wrapper'>
+        <div class='placement-reference'>
+            <span>Reference</span>
+            <div class="placement-popup"></div>
+        </div>
+    </div>
+</div>
+<script type="module" src="src/dev.ts"></script>
+</body>
+</html>
