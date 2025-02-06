@@ -1,4 +1,4 @@
-import { computePosition, placementTypes, type PlacementType } from './float';
+import { computePosition, placementTypes, type PlacementType } from './index';
 
 const placement: HTMLElement | null = document.querySelector('.placement');
 const placementReference: HTMLElement | null = document.querySelector('.placement-reference');
