@@ -6,44 +6,58 @@
     <title>Vite App</title>
     <style>
         .top-buttons {
-            display: flex;
-            top: 15px;
-            left: 50%;
-            position: absolute;
-            transform: translateX(-50%);
+            top: 0;
         }
 
         .bottom-buttons {
-            display: flex;
-            bottom: 15px;
-            left: 50%;
-            position: absolute;
-            transform: translateX(-50%);
+            bottom: 0;
         }
 
         .right-buttons {
-            top: 50%;
-            right: 15px;
-            display: flex;
-            flex-direction: column;
-            position: absolute;
-            transform: translateY(-50%);
+            right: 0;
         }
 
         .left-buttons {
-            top: 50%;
-            left: 15px;
+            left: 0;
+        }
+
+        .top-buttons,
+        .bottom-buttons,
+        .right-buttons,
+        .left-buttons {
             display: flex;
-            flex-direction: column;
             position: absolute;
+        }
+
+        .top-buttons,
+        .bottom-buttons {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .right-buttons,
+        .left-buttons {
+            top: 50%;
+            flex-direction: column;
             transform: translateY(-50%);
+        }
+
+        .button-wrapper {
+            cursor: pointer;
+            padding: 15px;
         }
 
         .button {
             width: 16px;
             height: 16px;
             border: 2px solid black;
+            transition: all 0.1s ease-out;
             border-radius: 50%;
+        }
+
+        .button-wrapper:hover .button {
+            transform: scale(1.25);
+            transition: all 0.1s ease-in;
         }
 
         .button_active {
@@ -127,24 +141,48 @@
 <body>
 <div class='placement'>
     <div class="top-buttons">
-        <div id="top-start" class="button"></div>
-        <div id="top" class="button"></div>
-        <div id="top-end" class="button"></div>
+        <div id="top-start" class="button-wrapper">
+            <div class="button"></div>
+        </div>
+        <div id="top" class="button-wrapper">
+            <div class="button"></div>
+        </div>
+        <div id="top-end" class="button-wrapper">
+            <div class="button"></div>
+        </div>
     </div>
     <div class="right-buttons">
-        <div id="right-start" class="button"></div>
-        <div id="right" class="button"></div>
-        <div id="right-end" class="button"></div>
+        <div id="right-start" class="button-wrapper">
+            <div class="button"></div>
+        </div>
+        <div id="right" class="button-wrapper">
+            <div class="button"></div>
+        </div>
+        <div id="right-end" class="button-wrapper">
+            <div class="button"></div>
+        </div>
     </div>
     <div class="bottom-buttons">
-        <div id="bottom-start" class="button"></div>
-        <div id="bottom" class="button"></div>
-        <div id="bottom-end" class="button"></div>
+        <div id="bottom-start" class="button-wrapper">
+            <div class="button"></div>
+        </div>
+        <div id="bottom" class="button-wrapper">
+            <div class="button"></div>
+        </div>
+        <div id="bottom-end" class="button-wrapper">
+            <div class="button"></div>
+        </div>
     </div>
     <div class="left-buttons">
-        <div id="left-start" class="button"></div>
-        <div id="left" class="button"></div>
-        <div id="left-end" class="button"></div>
+        <div id="left-start" class="button-wrapper">
+            <div class="button"></div>
+        </div>
+        <div id="left" class="button-wrapper">
+            <div class="button"></div>
+        </div>
+        <div id="left-end" class="button-wrapper">
+            <div class="button"></div>
+        </div>
     </div>
     <div class='placement-wrapper'>
         <div class='placement-reference'>
