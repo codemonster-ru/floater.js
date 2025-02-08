@@ -10,9 +10,9 @@ const placementSetPosition = (reference: HTMLElement, popup: HTMLElement, placem
 
         placementTypes.map((x: string) => {
             popup.classList.remove(`placement-popup_${x}`);
-            document.getElementById(x)?.classList.remove('button_active');
+            document.getElementById(x)?.querySelector('.button')?.classList.remove('button_active');
         });
-        document.getElementById(placement)?.classList.add('button_active');
+        document.getElementById(placement)?.querySelector('.button')?.classList.add('button_active');
         popup.classList.add(`placement-popup_${placement}`);
 
         computePosition(reference, popup, {
