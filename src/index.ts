@@ -1,1 +1,6 @@
-export { computePosition, placementTypes, type PlacementType } from './float';
+export {
+    offset,
+    placementTypes,
+    computePosition,
+    type PlacementType,
+} from './float';

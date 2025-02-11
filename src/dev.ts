@@ -1,4 +1,9 @@
-import { computePosition, placementTypes, type PlacementType } from './index';
+import {
+    offset,
+    placementTypes,
+    computePosition,
+    type PlacementType,
+} from './index';
 
 const placement: HTMLElement | null = document.querySelector('.placement');
 const placementReference: HTMLElement | null = document.querySelector('.placement-reference');
@@ -17,6 +22,7 @@ const placementSetPosition = (reference: HTMLElement, popup: HTMLElement, placem
 
         computePosition(reference, popup, {
             placement: placement,
+            middleware: [offset(4)],
         }).then(({ x, y }): void => {
             popup.style.top = `${y}px`;
             popup.style.left = `${x}px`;
