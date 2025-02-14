@@ -1,6 +1,6 @@
 {
     "name": "@codemonster-ru/monsterfloat",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Open source js library to position floating elements.",
     "license": "MIT",
     "author": "Kirill Kolesnikov",
