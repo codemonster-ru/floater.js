@@ -5,6 +5,11 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>Vite App</title>
     <style>
+        *, :after, :before, ::backdrop {
+            box-sizing: border-box;
+        }
+
+        /* Placement, start */
         .top-buttons {
             top: 0;
         }
@@ -77,17 +82,15 @@
         .placement {
             width: 550px;
             height: 400px;
-            /*overflow: scroll;*/
             position: relative;
             border: 1px solid black;
         }
 
         .placement-wrapper {
-            /*width: 1000px;*/
-            /*height: 1000px;*/
             width: 100%;
             height: 100%;
             display: flex;
+            position: relative;
             align-items: center;
             justify-content: center;
         }
@@ -97,15 +100,14 @@
             height: 96px;
             border: 2px dashed black;
             display: flex;
-            position: relative;
             font-weight: bold;
             align-items: center;
             justify-content: center;
         }
 
         .placement-popup {
-            top: 0;
-            left: 0;
+            /*top: 0;*/
+            /*left: 0;*/
             color: white;
             height: 36px;
             display: flex;
@@ -136,59 +138,118 @@
         .placement-popup_left-end {
             min-width: 100px;
         }
+
+        /* Placement, end */
+
+        /* Shift, start */
+        .shift {
+            width: 550px;
+            height: 400px;
+            overflow: scroll;
+            position: relative;
+            border: 1px solid black;
+        }
+
+        .shift-wrapper {
+            width: 1450px;
+            height: 950px;
+            display: flex;
+            position: relative;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .shift-reference {
+            width: 96px;
+            height: 96px;
+            border: 2px dashed black;
+            display: flex;
+            font-weight: bold;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .shift-popup {
+            top: 0;
+            left: 0;
+            color: white;
+            height: 250px;
+            display: flex;
+            font-weight: bold;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            background-color: #007bff;
+        }
+
+        .shift-popup__right {
+            min-width: 98px;
+        }
+
+        /* Shift, end */
     </style>
 </head>
 <body>
+<h2>Placement</h2>
 <div class='placement'>
-    <div class="top-buttons">
-        <div id="top-start" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-        <div id="top" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-        <div id="top-end" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-    </div>
-    <div class="right-buttons">
-        <div id="right-start" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-        <div id="right" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-        <div id="right-end" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-    </div>
-    <div class="bottom-buttons">
-        <div id="bottom-start" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-        <div id="bottom" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-        <div id="bottom-end" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-    </div>
-    <div class="left-buttons">
-        <div id="left-start" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-        <div id="left" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-        <div id="left-end" class="button-wrapper">
-            <div class="button"></div>
-        </div>
-    </div>
     <div class='placement-wrapper'>
+        <div class="top-buttons">
+            <div id="top-start" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+            <div id="top" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+            <div id="top-end" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+        </div>
+        <div class="right-buttons">
+            <div id="right-start" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+            <div id="right" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+            <div id="right-end" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+        </div>
+        <div class="bottom-buttons">
+            <div id="bottom-start" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+            <div id="bottom" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+            <div id="bottom-end" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+        </div>
+        <div class="left-buttons">
+            <div id="left-start" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+            <div id="left" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+            <div id="left-end" class="button-wrapper">
+                <div class="button"></div>
+            </div>
+        </div>
         <div class='placement-reference'>
             <span>Reference</span>
-            <div class="placement-popup"></div>
         </div>
+        <div class="placement-popup"></div>
+    </div>
+</div>
+<h2>Shift</h2>
+<div class='shift'>
+    <div class='shift-wrapper'>
+        <div class='shift-reference'>
+            <span>Reference</span>
+        </div>
+        <div class="shift-popup shift-popup__right">Popover</div>
     </div>
 </div>
 <script type="module" src="src/dev.ts"></script>
