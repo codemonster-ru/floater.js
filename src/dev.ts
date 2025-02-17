@@ -6,22 +6,20 @@ import {
     type PlacementType, autoUpdate,
 } from './index';
 
-// Placement, start
-
-const placement: HTMLElement | null = document.querySelector('.placement');
-const placementReference: HTMLElement | null = document.querySelector('.placement-reference');
-const placementPopup: HTMLElement | null = document.querySelector('.placement-popup');
+const placement: HTMLElement | null = document.querySelector('#placement.example');
+const placementReference: HTMLElement | null = document.querySelector('#placement .reference');
+const placementPopup: HTMLElement | null = document.querySelector('#placement .popup');
 
 const placementSetPosition = (reference: HTMLElement, popup: HTMLElement, placement: PlacementType): void => {
     document.getElementById(placement)?.addEventListener('click', (): void => {
         if (placementPopup !== null) placementPopup.innerHTML = placement;
 
         placementTypes.map((x: string) => {
-            popup.classList.remove(`placement-popup_${x}`);
+            popup.classList.remove(`popup_${x}`);
             document.getElementById(x)?.querySelector('.button')?.classList.remove('button_active');
         });
         document.getElementById(placement)?.querySelector('.button')?.classList.add('button_active');
-        popup.classList.add(`placement-popup_${placement}`);
+        popup.classList.add(`popup_${placement}`);
 
         computePosition(reference, popup, {
             placement: placement,
@@ -46,13 +44,9 @@ document.addEventListener('DOMContentLoaded', (): void => {
     }
 });
 
-// Placement, end
-
-// Shift, start
-
-const shiftBlock: HTMLElement | null = document.querySelector('.shift');
-const shiftReference: HTMLElement | null = document.querySelector('.shift-reference');
-const shiftPopup: HTMLElement | null = document.querySelector('.shift-popup');
+const shiftBlock: HTMLElement | null = document.querySelector('#shift.example');
+const shiftReference: HTMLElement | null = document.querySelector('#shift .reference');
+const shiftPopup: HTMLElement | null = document.querySelector('#shift .popup');
 
 document.addEventListener('DOMContentLoaded', (): void => {
     if (
@@ -76,5 +70,3 @@ document.addEventListener('DOMContentLoaded', (): void => {
         });
     }
 });
-
-// Shift, end

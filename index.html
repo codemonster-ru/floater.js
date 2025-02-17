@@ -9,7 +9,6 @@
             box-sizing: border-box;
         }
 
-        /* Placement, start */
         .top-buttons {
             top: 0;
         }
@@ -27,8 +26,8 @@
         }
 
         .top-buttons,
-        .bottom-buttons,
         .right-buttons,
+        .bottom-buttons,
         .left-buttons {
             display: flex;
             position: absolute;
@@ -79,87 +78,35 @@
             margin-top: 40px;
         }
 
-        .placement {
+        .example {
             width: 550px;
             height: 400px;
             position: relative;
             border: 1px solid black;
         }
 
-        .placement-wrapper {
+        .example_scroll {
+            overflow: scroll;
+        }
+
+        .wrapper {
+            display: flex;
+            position: relative;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wrapper_full {
             width: 100%;
             height: 100%;
-            display: flex;
-            position: relative;
-            align-items: center;
-            justify-content: center;
         }
 
-        .placement-reference {
-            width: 96px;
-            height: 96px;
-            border: 2px dashed black;
-            display: flex;
-            font-weight: bold;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .placement-popup {
-            /*top: 0;*/
-            /*left: 0;*/
-            color: white;
-            height: 36px;
-            display: flex;
-            font-weight: bold;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            background-color: #007bff;
-        }
-
-        .placement-popup_top,
-        .placement-popup_right,
-        .placement-popup_bottom,
-        .placement-popup_left {
-            min-width: 70px;
-        }
-
-        .placement-popup_top-start,
-        .placement-popup_top-end,
-        .placement-popup_bottom-start,
-        .placement-popup_bottom-end {
-            min-width: 150px;
-        }
-
-        .placement-popup_right-start,
-        .placement-popup_right-end,
-        .placement-popup_left-start,
-        .placement-popup_left-end {
-            min-width: 100px;
-        }
-
-        /* Placement, end */
-
-        /* Shift, start */
-        .shift {
-            width: 550px;
-            height: 400px;
-            overflow: scroll;
-            position: relative;
-            border: 1px solid black;
-        }
-
-        .shift-wrapper {
+        .wrapper_fixed {
             width: 1450px;
             height: 950px;
-            display: flex;
-            position: relative;
-            align-items: center;
-            justify-content: center;
         }
 
-        .shift-reference {
+        .reference {
             width: 96px;
             height: 96px;
             border: 2px dashed black;
@@ -169,11 +116,8 @@
             justify-content: center;
         }
 
-        .shift-popup {
-            top: 0;
-            left: 0;
+        .popup {
             color: white;
-            height: 250px;
             display: flex;
             font-weight: bold;
             align-items: center;
@@ -182,17 +126,47 @@
             background-color: #007bff;
         }
 
-        .shift-popup__right {
+        .popup_placement {
+            height: 36px;
+        }
+
+        .popup_shift {
+            top: 0;
+            left: 0;
+            height: 250px;
             min-width: 98px;
         }
 
-        /* Shift, end */
+        .popup_top,
+        .popup_right,
+        .popup_bottom,
+        .popup_left {
+            min-width: 70px;
+        }
+
+        .popup_top-start,
+        .popup_top-end,
+        .popup_bottom-start,
+        .popup_bottom-end {
+            min-width: 150px;
+        }
+
+        .popup_right-start,
+        .popup_right-end,
+        .popup_left-start,
+        .popup_left-end {
+            min-width: 100px;
+        }
+
+        .popup_shift {
+            min-width: 98px;
+        }
     </style>
 </head>
 <body>
 <h2>Placement</h2>
-<div class='placement'>
-    <div class='placement-wrapper'>
+<div id="placement" class='example'>
+    <div class='wrapper wrapper_full'>
         <div class="top-buttons">
             <div id="top-start" class="button-wrapper">
                 <div class="button"></div>
@@ -237,19 +211,19 @@
                 <div class="button"></div>
             </div>
         </div>
-        <div class='placement-reference'>
+        <div class='reference'>
             <span>Reference</span>
         </div>
-        <div class="placement-popup"></div>
+        <div class="popup popup_placement"></div>
     </div>
 </div>
 <h2>Shift</h2>
-<div class='shift'>
-    <div class='shift-wrapper'>
-        <div class='shift-reference'>
+<div id="shift" class='example example_scroll'>
+    <div class='wrapper wrapper_fixed'>
+        <div class='reference'>
             <span>Reference</span>
         </div>
-        <div class="shift-popup shift-popup__right">Popover</div>
+        <div class="popup popup_shift">Popover</div>
     </div>
 </div>
 <script type="module" src="src/dev.ts"></script>
