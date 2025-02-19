@@ -261,7 +261,7 @@ export const computePosition = (reference: HTMLElement, floating: HTMLElement, o
 
             break;
         case 'top-end':
-            params.x = reference.offsetLeft - buttonBoundingClientRect.width / 2;
+            params.x = reference.offsetLeft - tooltipBoundingClientRect.width + buttonBoundingClientRect.width;
             params.y = reference.offsetTop - tooltipBoundingClientRect.height;
             params.placement = options.placement;
 
