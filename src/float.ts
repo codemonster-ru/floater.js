@@ -244,80 +244,81 @@ export const computePosition = (reference: HTMLElement, floating: HTMLElement, o
             y: 0,
             placement: '',
         };
+        const placement: string = options.placement ? options.placement : 'bottom';
         const buttonBoundingClientRect: DOMRect = reference.getBoundingClientRect();
         const tooltipBoundingClientRect: DOMRect = floating.getBoundingClientRect();
 
-        switch (options.placement) {
+        switch (placement) {
         case 'top':
             params.x = reference.offsetLeft - tooltipBoundingClientRect.width / 2 + buttonBoundingClientRect.width / 2;
             params.y = reference.offsetTop - tooltipBoundingClientRect.height;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'top-start':
             params.x = reference.offsetLeft;
             params.y = reference.offsetTop - tooltipBoundingClientRect.height;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'top-end':
             params.x = reference.offsetLeft - tooltipBoundingClientRect.width + buttonBoundingClientRect.width;
             params.y = reference.offsetTop - tooltipBoundingClientRect.height;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'right':
             params.x = reference.offsetLeft + buttonBoundingClientRect.width;
             params.y = reference.offsetTop - tooltipBoundingClientRect.height / 2 + buttonBoundingClientRect.height / 2;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'right-start':
             params.x = reference.offsetLeft + buttonBoundingClientRect.width;
             params.y = reference.offsetTop;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'right-end':
             params.x = reference.offsetLeft + buttonBoundingClientRect.width;
             params.y = reference.offsetTop + buttonBoundingClientRect.height - tooltipBoundingClientRect.height;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'bottom':
             params.x = reference.offsetLeft + buttonBoundingClientRect.width / 2 - tooltipBoundingClientRect.width / 2;
             params.y = reference.offsetTop + buttonBoundingClientRect.height;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'bottom-start':
             params.x = reference.offsetLeft;
             params.y = reference.offsetTop + buttonBoundingClientRect.height;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'bottom-end':
             params.x = reference.offsetLeft - tooltipBoundingClientRect.width + buttonBoundingClientRect.width;
             params.y = reference.offsetTop + buttonBoundingClientRect.height;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'left':
             params.x = reference.offsetLeft - tooltipBoundingClientRect.width;
             params.y = reference.offsetTop + buttonBoundingClientRect.height / 2 - tooltipBoundingClientRect.height / 2;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'left-start':
             params.x = reference.offsetLeft - tooltipBoundingClientRect.width;
             params.y = reference.offsetTop;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         case 'left-end':
             params.x = reference.offsetLeft - tooltipBoundingClientRect.width;
             params.y = reference.offsetTop + buttonBoundingClientRect.height - tooltipBoundingClientRect.height;
-            params.placement = options.placement;
+            params.placement = placement;
 
             break;
         }

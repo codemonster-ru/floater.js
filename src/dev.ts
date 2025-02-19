@@ -70,3 +70,30 @@ document.addEventListener('DOMContentLoaded', (): void => {
         });
     }
 });
+
+const flipBlock: HTMLElement | null = document.querySelector('#flip.example');
+const flipReference: HTMLElement | null = document.querySelector('#flip .reference');
+const flipPopup: HTMLElement | null = document.querySelector('#flip .popup');
+
+document.addEventListener('DOMContentLoaded', (): void => {
+    if (
+        flipBlock !== null
+        && flipReference !== null
+        && flipPopup !== null
+    ) {
+        const x: number = (flipBlock.scrollWidth - flipBlock.clientWidth) / 2;
+        const y: number = (flipBlock.scrollHeight - flipBlock.clientHeight) / 2;
+
+        flipBlock.scrollTo(x, y);
+
+        autoUpdate(flipReference, () => {
+            computePosition(flipReference, flipPopup, {
+                placement: 'top',
+                middleware: [shift(), offset(5)],
+            }).then(({ x, y }): void => {
+                flipPopup.style.top = `${y}px`;
+                flipPopup.style.left = `${x}px`;
+            });
+        });
+    }
+});
