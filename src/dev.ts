@@ -1,4 +1,5 @@
 import {
+    flip,
     shift,
     offset,
     placementTypes,
@@ -89,7 +90,7 @@ document.addEventListener('DOMContentLoaded', (): void => {
         autoUpdate(flipReference, () => {
             computePosition(flipReference, flipPopup, {
                 placement: 'top',
-                middleware: [shift(), offset(5)],
+                middleware: [offset(5), flip()],
             }).then(({ x, y }): void => {
                 flipPopup.style.top = `${y}px`;
                 flipPopup.style.left = `${x}px`;
