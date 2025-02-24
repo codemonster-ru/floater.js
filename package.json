@@ -1,12 +1,12 @@
 {
-    "name": "@codemonster-ru/monsterfloat",
+    "name": "@codemonster-ru/floater.js",
     "version": "0.4.0",
     "description": "Open source js library to position floating elements.",
     "license": "MIT",
     "author": "Kirill Kolesnikov",
     "repository": {
         "type": "git",
-        "url": "https://github.com/codemonster-ru/monsterfloat.git"
+        "url": "https://github.com/codemonster-ru/floater.js.git"
     },
     "keywords": [],
     "type": "module",

@@ -1,4 +1,4 @@
-# MonsterFloat
+# Floater.js
 
 Open source js library to position floating elements.
 
