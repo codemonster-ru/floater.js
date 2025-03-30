@@ -123,7 +123,15 @@
             align-items: center;
             justify-content: center;
             position: absolute;
+        }
+
+        .popup {
+            /*.arrow {*/
             background-color: #007bff;
+        }
+
+        .arrow {
+            background-color: red;
         }
 
         .popup_placement {
@@ -164,7 +172,14 @@
         }
 
         .popup_shift {
-            min-width: 98px;
+            min-width: 196px;
+        }
+
+        .arrow {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            transform: rotate(45deg);
         }
     </style>
 </head>
@@ -239,6 +254,16 @@
                 <span>Reference</span>
             </div>
             <div class="popup popup_flip">Tooltip</div>
+        </div>
+    </div>
+    <h2>Arrow</h2>
+    <div id="arrow" class='example example_scroll'>
+        <div class='wrapper wrapper_fixed'>
+            <div class='reference'>
+                <span>Reference</span>
+            </div>
+            <div class="popup popup_shift">Popover</div>
+            <div class="arrow"></div>
         </div>
     </div>
 </div>

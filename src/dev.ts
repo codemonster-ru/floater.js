@@ -4,7 +4,7 @@ import {
     offset,
     placementTypes,
     computePosition,
-    type PlacementType, autoUpdate,
+    type PlacementType, autoUpdate, arrow,
 } from './index';
 
 const placement: HTMLElement | null = document.querySelector('#placement.example');
@@ -94,6 +94,40 @@ document.addEventListener('DOMContentLoaded', (): void => {
             }).then(({ x, y }): void => {
                 flipPopup.style.top = `${y}px`;
                 flipPopup.style.left = `${x}px`;
+            });
+        });
+    }
+});
+
+const arrowEl: HTMLElement | null = document.querySelector('#arrow .arrow');
+const arrowBlock: HTMLElement | null = document.querySelector('#arrow.example');
+const arrowReference: HTMLElement | null = document.querySelector('#arrow .reference');
+const arrowPopup: HTMLElement | null = document.querySelector('#arrow .popup');
+
+document.addEventListener('DOMContentLoaded', (): void => {
+    if (
+        arrowEl !== null &&
+        arrowBlock !== null &&
+        arrowPopup !== null &&
+        arrowReference !== null
+    ) {
+        const x: number = (arrowBlock.scrollWidth - arrowBlock.clientWidth) / 2;
+        const y: number = (arrowBlock.scrollHeight - arrowBlock.clientHeight) / 2;
+
+        arrowBlock.scrollTo(x, y);
+
+        autoUpdate(arrowReference, () => {
+            computePosition(arrowReference, arrowPopup, {
+                placement: 'left',
+                middleware: [shift(), offset(5), arrow(arrowEl)],
+            }).then(({ x, y, middlewareData }): void => {
+                arrowPopup.style.top = `${y}px`;
+                arrowPopup.style.left = `${x}px`;
+
+                if (middlewareData.arrow) {
+                    arrowEl.style.top = `${middlewareData.arrow.y}px`;
+                    arrowEl.style.left = `${middlewareData.arrow.x}px`;
+                }
             });
         });
     }

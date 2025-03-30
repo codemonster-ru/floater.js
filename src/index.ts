@@ -1,5 +1,6 @@
 export {
     flip,
+    arrow,
     shift,
     offset,
     autoUpdate,
