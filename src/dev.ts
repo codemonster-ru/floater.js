@@ -1,10 +1,14 @@
 import {
     flip,
+    arrow,
     shift,
     offset,
+    autoUpdate,
     placementTypes,
     computePosition,
-    type PlacementType, autoUpdate, arrow,
+    type VirtualRect,
+    type PlacementType,
+    type VirtualElement,
 } from './index';
 
 const placement: HTMLElement | null = document.querySelector('#placement.example');
@@ -129,6 +133,112 @@ document.addEventListener('DOMContentLoaded', (): void => {
                     arrowEl.style.left = `${middlewareData.arrow.x}px`;
                 }
             });
+        });
+    }
+});
+
+const virtualBlock: HTMLElement | null = document.querySelector('#virtual.example');
+const virtualPopup: HTMLElement | null = document.querySelector('#virtual .popup');
+
+document.addEventListener('DOMContentLoaded', (): void => {
+    if (virtualBlock && virtualPopup) {
+        virtualBlock.addEventListener('mouseenter', () => {
+            virtualPopup.style.opacity = '1';
+            virtualPopup.style.transform = 'scale(1)';
+        });
+
+        virtualBlock.addEventListener('mouseleave', () => {
+            virtualPopup.style.opacity = '0';
+            virtualPopup.style.transform = 'scale(0)';
+        });
+
+        virtualBlock.addEventListener('mousemove', ({
+            pageX,
+            pageY,
+            clientX,
+            clientY,
+        }) => {
+            const virtualEl: VirtualElement = {
+                offsetTop: pageY - virtualBlock.offsetTop,
+                offsetLeft: pageX - virtualBlock.offsetLeft,
+                getBoundingClientRect(): VirtualRect {
+                    return {
+                        x: clientX,
+                        y: clientY,
+                        width: 0,
+                        height: 0,
+                        top: clientY,
+                        right: clientX,
+                        bottom: clientY,
+                        left: clientX,
+                    };
+                },
+            };
+
+            computePosition(virtualEl, virtualPopup, {
+                placement: 'right-start',
+                middleware: [shift({ parent: virtualBlock }), offset(5)],
+            }).then(({ x, y }) => {
+                virtualPopup.style.top = `${y}px`;
+                virtualPopup.style.left = `${x}px`;
+            });
+        });
+    }
+});
+
+const virtualScrollBlock: HTMLElement | null = document.querySelector('#virtual_scroll.example');
+const virtualScrollPopup: HTMLElement | null = document.querySelector('#virtual_scroll .popup');
+
+document.addEventListener('DOMContentLoaded', (): void => {
+    if (virtualScrollBlock && virtualScrollPopup) {
+        virtualScrollBlock.addEventListener('mouseenter', () => {
+            virtualScrollPopup.style.opacity = '1';
+            virtualScrollPopup.style.transform = 'scale(1)';
+        });
+
+        virtualScrollBlock.addEventListener('mouseleave', () => {
+            virtualScrollPopup.style.opacity = '0';
+            virtualScrollPopup.style.transform = 'scale(0)';
+        });
+
+        virtualScrollBlock.addEventListener('mousemove', ({
+            pageX,
+            pageY,
+            clientX,
+            clientY,
+        }): void => {
+            const virtualEl: VirtualElement = {
+                offsetTop: pageY - virtualScrollBlock.offsetTop + virtualScrollBlock.scrollTop,
+                offsetLeft: pageX - virtualScrollBlock.offsetLeft + virtualScrollBlock.scrollLeft,
+                getBoundingClientRect(): VirtualRect {
+                    return {
+                        x: clientX,
+                        y: clientY,
+                        width: 0,
+                        height: 0,
+                        top: clientY,
+                        right: clientX,
+                        bottom: clientY,
+                        left: clientX,
+                    };
+                },
+            };
+
+            const calcPosition = () => {
+                computePosition(virtualEl, virtualScrollPopup, {
+                    placement: 'right-start',
+                    middleware: [shift(), offset(5)],
+                }).then(({ x, y }) => {
+                    virtualScrollPopup.style.top = `${y}px`;
+                    virtualScrollPopup.style.left = `${x}px`;
+                });
+            };
+
+            autoUpdate(virtualScrollPopup, () => {
+                calcPosition();
+            });
+
+            calcPosition();
         });
     }
 });
