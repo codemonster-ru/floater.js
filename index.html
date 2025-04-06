@@ -118,20 +118,27 @@
 
         .popup {
             color: white;
+            z-index: 2;
             display: flex;
+            overflow: hidden;
+            position: absolute;
             font-weight: bold;
             align-items: center;
             justify-content: center;
-            position: absolute;
-        }
-
-        .popup {
-            /*.arrow {*/
             background-color: #007bff;
         }
 
+        #virtual .popup,
+        #virtual_scroll .popup {
+            opacity: 0;
+            padding: 5px;
+            transform: scale(0);
+            transition: transform 0.2s, opacity 0.1s;
+        }
+
         .arrow {
-            background-color: red;
+            z-index: 1;
+            background-color: #007bff;
         }
 
         .popup_placement {
@@ -264,6 +271,18 @@
             </div>
             <div class="popup popup_shift">Popover</div>
             <div class="arrow"></div>
+        </div>
+    </div>
+    <h2>Virtual</h2>
+    <div id="virtual" class='example'>
+        <div class='wrapper wrapper_full'>
+            <div class="popup">Popover</div>
+        </div>
+    </div>
+    <h2>Virtual and scroll</h2>
+    <div id="virtual_scroll" class='example example_scroll'>
+        <div class='wrapper wrapper_fixed'>
+            <div class="popup">Popover</div>
         </div>
     </div>
 </div>
