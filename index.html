@@ -132,8 +132,16 @@
         #virtual_scroll .popup {
             opacity: 0;
             padding: 5px;
-            transform: scale(0);
-            transition: transform 0.2s, opacity 0.1s;
+            --x: 0px;
+            --y: 0px;
+            top: 0;
+            left: 0;
+            transform: translate(var(--x), var(--y));
+            transition: opacity 0.1s;
+        }
+        #virtual_scroll .popup {
+            transform: none;
+            transition: none;
         }
 
         .arrow {

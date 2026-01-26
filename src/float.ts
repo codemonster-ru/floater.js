@@ -54,6 +54,8 @@ export interface MiddlewareParamType extends PositionType {
 export interface MiddlewareOutType extends PositionType {
     arrowX?: number,
     arrowY?: number,
+    baseX?: number,
+    baseY?: number,
 }
 
 export interface MiddlewareType {
@@ -89,11 +91,48 @@ const getScrollParent = (node: HTMLElement | VirtualElement): HTMLElement | null
         return null;
     }
 
-    if (node.scrollHeight > node.clientHeight) {
+    if (typeof window !== 'undefined') {
+        const style = window.getComputedStyle(node);
+        const overflow = `${style.overflowX}${style.overflowY}`;
+        const isScrollable = /(auto|scroll|overlay)/.test(overflow);
+
+        if (isScrollable) {
+            return node;
+        }
+    }
+
+    if (node.scrollHeight > node.clientHeight || node.scrollWidth > node.clientWidth) {
         return node;
     } else {
         return getScrollParent(node.parentNode as HTMLElement);
     }
+};
+const getElementOffsets = (
+    element: HTMLElement | VirtualElement,
+    floating?: HTMLElement,
+): { left: number, top: number, width: number, height: number } => {
+    const rect = element.getBoundingClientRect();
+    const parent = floating ? (floating.offsetParent as HTMLElement | null) : null;
+
+    if (parent) {
+        const parentRect = parent.getBoundingClientRect();
+        const scrollLeft = parent.scrollLeft;
+        const scrollTop = parent.scrollTop;
+
+        return {
+            left: rect.left - parentRect.left + scrollLeft,
+            top: rect.top - parentRect.top + scrollTop,
+            width: rect.width,
+            height: rect.height,
+        };
+    }
+
+    return {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+    };
 };
 const getScrollDirection = (reference: HTMLElement | VirtualElement) => {
     const parent: HTMLElement | null = getScrollParent(reference);
@@ -301,7 +340,7 @@ export const getOffsetX = (
         }
     }
 
-    if (options.middleware?.find((m: MiddlewareType): boolean => m.name === 'shift')) {
+    if (options.middleware?.find((m: MiddlewareType): boolean => m.name === 'shift') && arrowMiddleware) {
         let shiftParent: null | HTMLElement = null;
         let arrowDifferenceWidth: number = 0;
 
@@ -309,13 +348,11 @@ export const getOffsetX = (
             shiftParent = shiftMiddleware.params?.parent as null | HTMLElement;
         }
 
-        if (arrowMiddleware) {
-            const arrowElement: HTMLElement = arrowMiddleware.params?.arrow as HTMLElement;
+        const arrowElement: HTMLElement = arrowMiddleware.params?.arrow as HTMLElement;
 
-            arrowDifferenceWidth = arrowElement.getBoundingClientRect().width / 2;
-            arrowDifferenceWidth += getArrowDifferenceWidth(arrowElement);
-            arrowDifferenceWidth -= value;
-        }
+        arrowDifferenceWidth = arrowElement.getBoundingClientRect().width / 2;
+        arrowDifferenceWidth += getArrowDifferenceWidth(arrowElement);
+        arrowDifferenceWidth -= value;
 
         if (placement.startsWith('right')) {
             if (toShiftRight(primaryX - xValue, floating, shiftParent) <= value) {
@@ -396,7 +433,7 @@ export const getOffsetY = (
         }
     }
 
-    if (options.middleware?.find((m: MiddlewareType): boolean => m.name === 'shift')) {
+    if (options.middleware?.find((m: MiddlewareType): boolean => m.name === 'shift') && arrowMiddleware) {
         let shiftParent: null | HTMLElement = null;
         let arrowDifferenceHeight: number = 0;
 
@@ -404,13 +441,11 @@ export const getOffsetY = (
             shiftParent = shiftMiddleware.params?.parent as null | HTMLElement;
         }
 
-        if (arrowMiddleware) {
-            const arrowElement: HTMLElement = arrowMiddleware.params?.arrow as HTMLElement;
+        const arrowElement: HTMLElement = arrowMiddleware.params?.arrow as HTMLElement;
 
-            arrowDifferenceHeight = arrowElement.getBoundingClientRect().height / 2;
-            arrowDifferenceHeight += getArrowDifferenceHeight(arrowElement);
-            arrowDifferenceHeight -= value;
-        }
+        arrowDifferenceHeight = arrowElement.getBoundingClientRect().height / 2;
+        arrowDifferenceHeight += getArrowDifferenceHeight(arrowElement);
+        arrowDifferenceHeight -= value;
 
         if (placement.startsWith('top')) {
             if (toShiftTop(primaryY - yValue, floating, shiftParent) <= value) {
@@ -490,8 +525,12 @@ export const shift = (params?: {
     fn: ({
         x,
         y,
+        options,
+        primaryX,
+        primaryY,
         floating,
         placement,
+        reference,
     }: MiddlewareParamType): MiddlewareOutType => {
         const parent: HTMLElement | null = getScrollParent(floating);
         const result: MiddlewareOutType = {
@@ -499,30 +538,134 @@ export const shift = (params?: {
             y: y,
             placement: placement,
         };
+        const middleware = options.middleware || [];
+        const shiftIndex = middleware.findIndex((m) => m.name === 'shift');
+        const offsetIndex = middleware.findIndex((m) => m.name === 'offset');
+        const applyOffsetLater = offsetIndex !== -1 && (shiftIndex === -1 || offsetIndex > shiftIndex);
+        const offsetMiddleware: MiddlewareType | undefined = middleware.find((m) => m.name === 'offset');
+        const offsetValue: number = (offsetMiddleware ? offsetMiddleware.params?.value : 0) as number;
+        const offsetX = applyOffsetLater ? getOffsetX(offsetValue, options, primaryX, placement, floating) : 0;
+        const offsetY = applyOffsetLater ? getOffsetY(offsetValue, options, primaryY, placement, floating) : 0;
+        const adjustedX = x - offsetX;
+        const adjustedY = y - offsetY;
+        let workingX = adjustedX;
+        let workingY = adjustedY;
+        const padding = offsetMiddleware ? Math.abs(offsetValue) : 0;
+        const marginX = padding;
+        const marginY = padding;
 
         if (params?.parent === undefined && parent !== null) {
-            if (toShiftTop(result.y, floating) <= 0) {
-                result.y = parent.scrollTop;
-            } else if (toShiftBottom(result.y, floating) <= 0) {
-                result.y = getScrollBottom(parent) - floating.clientHeight;
+            const referenceOffsets = getElementOffsets(reference, floating);
+            const referenceLeft = referenceOffsets.left;
+            const referenceRight = referenceOffsets.left + referenceOffsets.width;
+            const referenceTop = referenceOffsets.top;
+            const referenceBottom = referenceOffsets.top + referenceOffsets.height;
+            const minX = parent.scrollLeft + marginX;
+            const maxXBase = getScrollRight(parent) - floating.clientWidth - marginX;
+            const maxX = maxXBase < minX ? minX : maxXBase;
+            const minY = parent.scrollTop + marginY;
+            const maxYBase = getScrollBottom(parent) - floating.clientHeight - marginY;
+            const maxY = maxYBase < minY ? minY : maxYBase;
+            const viewLeft = parent.scrollLeft;
+            const viewRight = getScrollRight(parent);
+            const viewTop = parent.scrollTop;
+            const viewBottom = getScrollBottom(parent);
+
+            if (referenceRight <= viewLeft) {
+                workingX = minX;
+            } else if (referenceLeft >= viewRight) {
+                workingX = maxX;
             }
 
-            if (toShiftRight(result.x, floating) <= 0) {
-                result.x = getScrollRight(parent) - floating.clientWidth;
-            } else if (toShiftLeft(result.x, floating) <= 0) {
-                result.x = parent.scrollLeft;
+            if (referenceBottom <= viewTop) {
+                workingY = minY;
+            } else if (referenceTop >= viewBottom) {
+                workingY = maxY;
+            }
+
+            if (workingY < minY) {
+                workingY = minY;
+            } else if (workingY > maxY) {
+                workingY = maxY;
+            }
+
+            if (workingX < minX) {
+                workingX = minX;
+            } else if (workingX > maxX) {
+                workingX = maxX;
             }
         } else if (params?.parent) {
-            if (toShiftTop(result.y, floating, params?.parent) <= 0) {
-                result.y = 0;
-            } else if (toShiftBottom(result.y, floating, params?.parent) <= 0) {
-                result.y = params?.parent.getBoundingClientRect().height - floating.clientHeight;
+            const parentRect = params?.parent.getBoundingClientRect();
+            const minX = marginX;
+            const maxXBase = parentRect.width - floating.clientWidth - marginX;
+            const maxX = maxXBase < minX ? minX : maxXBase;
+            const minY = marginY;
+            const maxYBase = parentRect.height - floating.clientHeight - marginY;
+            const maxY = maxYBase < minY ? minY : maxYBase;
+
+            if (workingY < minY) {
+                workingY = minY;
+            } else if (workingY > maxY) {
+                workingY = maxY;
             }
 
-            if (toShiftRight(result.x, floating, params?.parent) <= 0) {
-                result.x = params?.parent.getBoundingClientRect().width - floating.clientWidth;
-            } else if (toShiftLeft(result.x, floating, params?.parent) <= 0) {
-                result.x = 0;
+            if (workingX < minX) {
+                workingX = minX;
+            } else if (workingX > maxX) {
+                workingX = maxX;
+            }
+        }
+
+        if (applyOffsetLater) {
+            result.x = x + (workingX - adjustedX);
+            result.y = y + (workingY - adjustedY);
+        } else {
+            result.x = workingX;
+            result.y = workingY;
+        }
+
+        if (params?.parent === undefined && parent !== null) {
+            const minXFinal = parent.scrollLeft + marginX;
+            const maxXFinal = getScrollRight(parent) - floating.clientWidth - marginX;
+            const minYFinal = parent.scrollTop + marginY;
+            const maxYFinal = getScrollBottom(parent) - floating.clientHeight - marginY;
+            const minX = applyOffsetLater ? minXFinal + offsetX : minXFinal;
+            const maxX = applyOffsetLater ? maxXFinal + offsetX : maxXFinal;
+            const minY = applyOffsetLater ? minYFinal + offsetY : minYFinal;
+            const maxY = applyOffsetLater ? maxYFinal + offsetY : maxYFinal;
+
+            if (result.x < minX) {
+                result.x = minX;
+            } else if (result.x > maxX) {
+                result.x = maxX;
+            }
+
+            if (result.y < minY) {
+                result.y = minY;
+            } else if (result.y > maxY) {
+                result.y = maxY;
+            }
+        } else if (params?.parent) {
+            const parentRect = params?.parent.getBoundingClientRect();
+            const minXFinal = marginX;
+            const maxXFinal = parentRect.width - floating.clientWidth - marginX;
+            const minYFinal = marginY;
+            const maxYFinal = parentRect.height - floating.clientHeight - marginY;
+            const minX = applyOffsetLater ? minXFinal + offsetX : minXFinal;
+            const maxX = applyOffsetLater ? maxXFinal + offsetX : maxXFinal;
+            const minY = applyOffsetLater ? minYFinal + offsetY : minYFinal;
+            const maxY = applyOffsetLater ? maxYFinal + offsetY : maxYFinal;
+
+            if (result.x < minX) {
+                result.x = minX;
+            } else if (result.x > maxX) {
+                result.x = maxX;
+            }
+
+            if (result.y < minY) {
+                result.y = minY;
+            } else if (result.y > maxY) {
+                result.y = maxY;
             }
         }
 
@@ -543,19 +686,31 @@ export const getArrowDifferenceHeight = (arrow: HTMLElement): number => {
         return 0;
     }
 };
-const getArrowPositionX = (x: number, arrow: HTMLElement, arrowX: number, floating: HTMLElement) => {
-    if (x + getArrowDifferenceWidth(arrow) >= arrowX) {
-        return x + getArrowDifferenceWidth(arrow);
-    } else if (x + floating.getBoundingClientRect().width + getArrowDifferenceWidth(arrow) - arrow.getBoundingClientRect().width <= arrowX) {
-        return x + getArrowDifferenceWidth(arrow) + floating.getBoundingClientRect().width - arrow.getBoundingClientRect().width;
+const getArrowPositionX = (x: number, arrow: HTMLElement, arrowX: number, floating: HTMLElement): number => {
+    const minX = x + getArrowDifferenceWidth(arrow);
+    const maxX = x + floating.getBoundingClientRect().width + getArrowDifferenceWidth(arrow) - arrow.getBoundingClientRect().width;
+
+    if (arrowX < minX) {
+        return minX;
     }
+    if (arrowX > maxX) {
+        return maxX;
+    }
+
+    return arrowX;
 };
-const getArrowPositionY = (y: number, arrow: HTMLElement, arrowY: number, floating: HTMLElement) => {
-    if (y + getArrowDifferenceHeight(arrow) >= arrowY) {
-        return y + getArrowDifferenceHeight(arrow);
-    } else if (y + floating.getBoundingClientRect().height + getArrowDifferenceHeight(arrow) - arrow.getBoundingClientRect().height <= arrowY) {
-        return y + floating.getBoundingClientRect().height + getArrowDifferenceHeight(arrow) - arrow.getBoundingClientRect().height;
+const getArrowPositionY = (y: number, arrow: HTMLElement, arrowY: number, floating: HTMLElement): number => {
+    const minY = y + getArrowDifferenceHeight(arrow);
+    const maxY = y + floating.getBoundingClientRect().height + getArrowDifferenceHeight(arrow) - arrow.getBoundingClientRect().height;
+
+    if (arrowY < minY) {
+        return minY;
     }
+    if (arrowY > maxY) {
+        return maxY;
+    }
+
+    return arrowY;
 };
 export const getTopArrowPosition = (
     x: number,
@@ -564,10 +719,11 @@ export const getTopArrowPosition = (
     floating: HTMLElement,
     reference: HTMLElement | VirtualElement,
 ): ArrowPositionType => {
-    let arrowX: number = reference.offsetLeft + getArrowDifferenceWidth(arrow) + reference.getBoundingClientRect().width / 2 - arrow.getBoundingClientRect().width / 2;
+    const referenceOffsets = getElementOffsets(reference, floating);
+    let arrowX: number = referenceOffsets.left + getArrowDifferenceWidth(arrow) + referenceOffsets.width / 2 - arrow.getBoundingClientRect().width / 2;
     const arrowY: number = y + getArrowDifferenceHeight(arrow) + floating.getBoundingClientRect().height - arrow.getBoundingClientRect().height / 2;
 
-    arrowX = getArrowPositionX(x, arrow, arrowX, floating) || arrowX;
+    arrowX = getArrowPositionX(x, arrow, arrowX, floating);
 
     return {
         x: x,
@@ -584,14 +740,11 @@ export const getRightArrowPosition = (
     floating: HTMLElement,
     reference: HTMLElement | VirtualElement,
 ): ArrowPositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
     const arrowX: number = x + getArrowDifferenceWidth(arrow) - arrow.getBoundingClientRect().width / 2;
-    let arrowY: number = reference.offsetTop + getArrowDifferenceHeight(arrow) - arrow.getBoundingClientRect().height / 2 + reference.getBoundingClientRect().height / 2;
+    let arrowY: number = referenceOffsets.top + getArrowDifferenceHeight(arrow) - arrow.getBoundingClientRect().height / 2 + referenceOffsets.height / 2;
 
-    const arrowPositionY: number | undefined = getArrowPositionY(y, arrow, arrowY, floating);
-
-    if (arrowPositionY) {
-        arrowY = arrowPositionY;
-    }
+    arrowY = getArrowPositionY(y, arrow, arrowY, floating);
 
     return {
         x: x,
@@ -608,10 +761,11 @@ export const getBottomArrowPosition = (
     floating: HTMLElement,
     reference: HTMLElement | VirtualElement,
 ): ArrowPositionType => {
-    let arrowX: number = reference.offsetLeft + getArrowDifferenceWidth(arrow) + reference.getBoundingClientRect().width / 2 - arrow.getBoundingClientRect().width / 2;
+    const referenceOffsets = getElementOffsets(reference, floating);
+    let arrowX: number = referenceOffsets.left + getArrowDifferenceWidth(arrow) + referenceOffsets.width / 2 - arrow.getBoundingClientRect().width / 2;
     const arrowY: number = y + getArrowDifferenceHeight(arrow) - arrow.getBoundingClientRect().height / 2;
 
-    arrowX = getArrowPositionX(x, arrow, arrowX, floating) || arrowX;
+    arrowX = getArrowPositionX(x, arrow, arrowX, floating);
 
     return {
         x: x,
@@ -628,10 +782,11 @@ export const getLeftArrowPosition = (
     floating: HTMLElement,
     reference: HTMLElement | VirtualElement,
 ): ArrowPositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
     const arrowX: number = x + floating.getBoundingClientRect().width + getArrowDifferenceWidth(arrow) - arrow.getBoundingClientRect().width / 2;
-    let arrowY: number = reference.offsetTop + getArrowDifferenceHeight(arrow) - arrow.getBoundingClientRect().height / 2 + reference.getBoundingClientRect().height / 2;
+    let arrowY: number = referenceOffsets.top + getArrowDifferenceHeight(arrow) - arrow.getBoundingClientRect().height / 2 + referenceOffsets.height / 2;
 
-    arrowY = getArrowPositionY(y, arrow, arrowY, floating) || arrowY;
+    arrowY = getArrowPositionY(y, arrow, arrowY, floating);
 
     return {
         x: x,
@@ -712,7 +867,7 @@ export const arrow = (arrow: HTMLElement): MiddlewareType => ({
                 if (
                     result.x + getArrowDifferenceWidth(arrow) >= arrowPosition.arrowX ||
                     result.x + getArrowDifferenceWidth(arrow) + floating.getBoundingClientRect().width - arrow.getBoundingClientRect().width <= arrowPosition.arrowX ||
-                    result.y + floating.getBoundingClientRect().height + arrow.getBoundingClientRect().height / 2 >= getTopElementPosition(reference) ||
+                    result.y + floating.getBoundingClientRect().height + arrow.getBoundingClientRect().height / 2 >= getTopElementPosition(reference, floating) ||
                     toShiftBottom(arrowPosition.arrowY + getArrowDifferenceHeight(arrow), arrow) <= 0
                 ) {
                     arrowPosition.arrowY = arrowPosition.arrowY - arrow.getBoundingClientRect().height / 2;
@@ -721,7 +876,7 @@ export const arrow = (arrow: HTMLElement): MiddlewareType => ({
                 if (
                     result.y + getArrowDifferenceHeight(arrow) >= arrowPosition.arrowY ||
                     result.y + getArrowDifferenceHeight(arrow) + floating.getBoundingClientRect().height - arrow.getBoundingClientRect().height <= arrowPosition.arrowY ||
-                    result.x - arrow.getBoundingClientRect().width / 2 <= getRightElementPosition(reference) ||
+                    result.x - arrow.getBoundingClientRect().width / 2 <= getRightElementPosition(reference, floating) ||
                     toShiftLeft(arrowPosition.arrowX - getArrowDifferenceWidth(arrow) - offsetValue, arrow) <= 0
                 ) {
                     arrowPosition.arrowX = arrowPosition.arrowX + arrow.getBoundingClientRect().width / 2;
@@ -730,7 +885,7 @@ export const arrow = (arrow: HTMLElement): MiddlewareType => ({
                 if (
                     result.x + getArrowDifferenceWidth(arrow) >= arrowPosition.arrowX ||
                     result.x + getArrowDifferenceWidth(arrow) + floating.getBoundingClientRect().width - arrow.getBoundingClientRect().width <= arrowPosition.arrowX ||
-                    result.y - arrow.getBoundingClientRect().height / 2 <= getBottomElementPosition(reference) ||
+                    result.y - arrow.getBoundingClientRect().height / 2 <= getBottomElementPosition(reference, floating) ||
                     toShiftTop(arrowPosition.arrowY - getArrowDifferenceHeight(arrow), arrow) <= 0
                 ) {
                     arrowPosition.arrowY = arrowPosition.arrowY + arrow.getBoundingClientRect().height / 2;
@@ -739,7 +894,7 @@ export const arrow = (arrow: HTMLElement): MiddlewareType => ({
                 if (
                     result.y + getArrowDifferenceHeight(arrow) >= arrowPosition.arrowY ||
                     result.y + getArrowDifferenceHeight(arrow) + floating.getBoundingClientRect().height - arrow.getBoundingClientRect().height <= arrowPosition.arrowY ||
-                    result.x + floating.getBoundingClientRect().width + arrow.getBoundingClientRect().width / 2 >= getLeftElementPosition(reference) ||
+                    result.x + floating.getBoundingClientRect().width + arrow.getBoundingClientRect().width / 2 >= getLeftElementPosition(reference, floating) ||
                     toShiftRight(arrowPosition.arrowX + getArrowDifferenceWidth(arrow) + offsetValue, arrow) <= 0
                 ) {
                     arrowPosition.arrowX = arrowPosition.arrowX - arrow.getBoundingClientRect().width / 2;
@@ -753,105 +908,156 @@ export const arrow = (arrow: HTMLElement): MiddlewareType => ({
         return result;
     },
 });
-export const autoUpdate = (reference: HTMLElement | VirtualElement, callback: () => void): void => {
+export const autoUpdate = (reference: HTMLElement | VirtualElement, callback: () => void): () => void => {
     const parent: HTMLElement | null = getScrollParent(reference);
+    const cleanup: Array<() => void> = [];
 
-    if (parent === null) {
-        return;
+    if (parent !== null) {
+        const onScroll = () => callback();
+
+        parent.addEventListener('scroll', onScroll, false);
+        cleanup.push(() => parent.removeEventListener('scroll', onScroll, false));
     }
 
-    const onScroll = () => callback();
+    if (typeof window !== 'undefined') {
+        const onWindowScroll = () => callback();
+        const onResize = () => callback();
 
-    parent.addEventListener('scroll', onScroll, false);
+        window.addEventListener('scroll', onWindowScroll, false);
+        window.addEventListener('resize', onResize, false);
+        cleanup.push(() => window.removeEventListener('scroll', onWindowScroll, false));
+        cleanup.push(() => window.removeEventListener('resize', onResize, false));
+    }
+
+    if (typeof ResizeObserver !== 'undefined' && reference instanceof HTMLElement) {
+        const resizeObserver = new ResizeObserver(() => callback());
+
+        resizeObserver.observe(reference);
+        cleanup.push(() => resizeObserver.disconnect());
+    }
+
+    return () => cleanup.forEach((fn) => fn());
 };
 export const getTopPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft - floating.getBoundingClientRect().width / 2 + reference.getBoundingClientRect().width / 2,
-        y: reference.offsetTop - floating.getBoundingClientRect().height,
+        x: referenceOffsets.left - floating.getBoundingClientRect().width / 2 + referenceOffsets.width / 2,
+        y: referenceOffsets.top - floating.getBoundingClientRect().height,
         placement: 'top',
     };
 };
 export const getTopStartPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft,
-        y: reference.offsetTop - floating.getBoundingClientRect().height,
+        x: referenceOffsets.left,
+        y: referenceOffsets.top - floating.getBoundingClientRect().height,
         placement: 'top-start',
     };
 };
 export const getTopEndPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft - floating.getBoundingClientRect().width + reference.getBoundingClientRect().width,
-        y: reference.offsetTop - floating.getBoundingClientRect().height,
+        x: referenceOffsets.left - floating.getBoundingClientRect().width + referenceOffsets.width,
+        y: referenceOffsets.top - floating.getBoundingClientRect().height,
         placement: 'top-end',
     };
 };
 export const getRightPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft + reference.getBoundingClientRect().width,
-        y: reference.offsetTop - floating.getBoundingClientRect().height / 2 + reference.getBoundingClientRect().height / 2,
+        x: referenceOffsets.left + referenceOffsets.width,
+        y: referenceOffsets.top - floating.getBoundingClientRect().height / 2 + referenceOffsets.height / 2,
         placement: 'right',
     };
 };
-export const getRightStartPosition = (reference: HTMLElement | VirtualElement): PositionType => {
+export const getRightStartPosition = (reference: HTMLElement | VirtualElement, floating?: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft + reference.getBoundingClientRect().width,
-        y: reference.offsetTop,
+        x: referenceOffsets.left + referenceOffsets.width,
+        y: referenceOffsets.top,
         placement: 'right-start',
     };
 };
 export const getRightEndPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft + reference.getBoundingClientRect().width,
-        y: reference.offsetTop + reference.getBoundingClientRect().height - floating.getBoundingClientRect().height,
+        x: referenceOffsets.left + referenceOffsets.width,
+        y: referenceOffsets.top + referenceOffsets.height - floating.getBoundingClientRect().height,
         placement: 'right-end',
     };
 };
 export const getBottomPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft + reference.getBoundingClientRect().width / 2 - floating.getBoundingClientRect().width / 2,
-        y: reference.offsetTop + reference.getBoundingClientRect().height,
+        x: referenceOffsets.left + referenceOffsets.width / 2 - floating.getBoundingClientRect().width / 2,
+        y: referenceOffsets.top + referenceOffsets.height,
         placement: 'bottom',
     };
 };
-export const getBottomStartPosition = (reference: HTMLElement | VirtualElement): PositionType => {
+export const getBottomStartPosition = (reference: HTMLElement | VirtualElement, floating?: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft,
-        y: reference.offsetTop + reference.getBoundingClientRect().height,
+        x: referenceOffsets.left,
+        y: referenceOffsets.top + referenceOffsets.height,
         placement: 'bottom-start',
     };
 };
 export const getBottomEndPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft - floating.getBoundingClientRect().width + reference.getBoundingClientRect().width,
-        y: reference.offsetTop + reference.getBoundingClientRect().height,
+        x: referenceOffsets.left - floating.getBoundingClientRect().width + referenceOffsets.width,
+        y: referenceOffsets.top + referenceOffsets.height,
         placement: 'bottom-end',
     };
 };
 export const getLeftPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft - floating.getBoundingClientRect().width,
-        y: reference.offsetTop + reference.getBoundingClientRect().height / 2 - floating.getBoundingClientRect().height / 2,
+        x: referenceOffsets.left - floating.getBoundingClientRect().width,
+        y: referenceOffsets.top + referenceOffsets.height / 2 - floating.getBoundingClientRect().height / 2,
         placement: 'left',
     };
 };
 export const getLeftStartPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft - floating.getBoundingClientRect().width,
-        y: reference.offsetTop,
+        x: referenceOffsets.left - floating.getBoundingClientRect().width,
+        y: referenceOffsets.top,
         placement: 'left-start',
     };
 };
 export const getLeftEndPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement): PositionType => {
+    const referenceOffsets = getElementOffsets(reference, floating);
+
     return {
-        x: reference.offsetLeft - floating.getBoundingClientRect().width,
-        y: reference.offsetTop + reference.getBoundingClientRect().height - floating.getBoundingClientRect().height,
+        x: referenceOffsets.left - floating.getBoundingClientRect().width,
+        y: referenceOffsets.top + referenceOffsets.height - floating.getBoundingClientRect().height,
         placement: 'left-end',
     };
 };
-export const getTopElementPosition = (element: HTMLElement | VirtualElement) => element.offsetTop;
-export const getRightElementPosition = (element: HTMLElement | VirtualElement) => element.offsetLeft + element.getBoundingClientRect().width;
-export const getBottomElementPosition = (element: HTMLElement | VirtualElement) => element.offsetTop + element.getBoundingClientRect().height;
-export const getLeftElementPosition = (element: HTMLElement | VirtualElement) => element.offsetLeft;
+export const getTopElementPosition = (element: HTMLElement | VirtualElement, floating?: HTMLElement) => getElementOffsets(element, floating).top;
+export const getRightElementPosition = (element: HTMLElement | VirtualElement, floating?: HTMLElement) => {
+    const offsets = getElementOffsets(element, floating);
+    
+    return offsets.left + offsets.width;
+};
+export const getBottomElementPosition = (element: HTMLElement | VirtualElement, floating?: HTMLElement) => {
+    const offsets = getElementOffsets(element, floating);
+    
+    return offsets.top + offsets.height;
+};
+export const getLeftElementPosition = (element: HTMLElement | VirtualElement, floating?: HTMLElement) => getElementOffsets(element, floating).left;
 export const getPosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement, placement: string): PositionType => {
     switch (placement) {
     case 'top':
@@ -863,13 +1069,13 @@ export const getPosition = (reference: HTMLElement | VirtualElement, floating: H
     case 'right':
         return getRightPosition(reference, floating);
     case 'right-start':
-        return getRightStartPosition(reference);
+        return getRightStartPosition(reference, floating);
     case 'right-end':
         return getRightEndPosition(reference, floating);
     case 'bottom':
         return getBottomPosition(reference, floating);
     case 'bottom-start':
-        return getBottomStartPosition(reference);
+        return getBottomStartPosition(reference, floating);
     case 'bottom-end':
         return getBottomEndPosition(reference, floating);
     case 'left':
@@ -900,7 +1106,31 @@ export const isVisiblePosition = (
             toShiftLeft(position.x, floating) > 0;
     }
 
-    return false;
+    if (typeof window === 'undefined') {
+        return true;
+    }
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const offsetParent = (reference instanceof HTMLElement ? reference.offsetParent as HTMLElement | null : null)
+        || (floating.offsetParent as HTMLElement | null);
+
+    if (offsetParent) {
+        const parentRect = offsetParent.getBoundingClientRect();
+        const left = parentRect.left + position.x;
+        const top = parentRect.top + position.y;
+        const right = left + floating.clientWidth;
+        const bottom = top + floating.clientHeight;
+
+        return left >= 0 && top >= 0 && right <= viewportWidth && bottom <= viewportHeight;
+    }
+
+    const left = position.x;
+    const top = position.y;
+    const right = left + floating.clientWidth;
+    const bottom = top + floating.clientHeight;
+
+    return left >= 0 && top >= 0 && right <= viewportWidth && bottom <= viewportHeight;
 };
 export const computePosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement, options: OptionType = {}): Promise<ParamsType> => {
     return new Promise((resolve): void => {
@@ -938,11 +1168,10 @@ export const computePosition = (reference: HTMLElement | VirtualElement, floatin
             params.y = middleware.y;
 
             if (x.name === 'arrow') {
-                middleware.x = middleware.arrowX!;
-                middleware.y = middleware.arrowY!;
-
-                delete middleware.arrowX;
-                delete middleware.arrowY;
+                middleware.baseX = middleware.x;
+                middleware.baseY = middleware.y;
+                middleware.x = middleware.arrowX ?? middleware.x;
+                middleware.y = middleware.arrowY ?? middleware.y;
             }
 
             params.middlewareData[x.name] = middleware;
