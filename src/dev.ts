@@ -142,14 +142,18 @@ const virtualPopup: HTMLElement | null = document.querySelector('#virtual .popup
 
 document.addEventListener('DOMContentLoaded', (): void => {
     if (virtualBlock && virtualPopup) {
+        const snapToDevicePixel = (value: number): number => {
+            const ratio = window.devicePixelRatio || 1;
+            
+            return Math.round(value * ratio) / ratio;
+        };
+
         virtualBlock.addEventListener('mouseenter', () => {
             virtualPopup.style.opacity = '1';
-            virtualPopup.style.transform = 'scale(1)';
         });
 
         virtualBlock.addEventListener('mouseleave', () => {
             virtualPopup.style.opacity = '0';
-            virtualPopup.style.transform = 'scale(0)';
         });
 
         virtualBlock.addEventListener('mousemove', ({
@@ -179,8 +183,8 @@ document.addEventListener('DOMContentLoaded', (): void => {
                 placement: 'right-start',
                 middleware: [shift({ parent: virtualBlock }), offset(5)],
             }).then(({ x, y }) => {
-                virtualPopup.style.top = `${y}px`;
-                virtualPopup.style.left = `${x}px`;
+                virtualPopup.style.setProperty('--x', `${snapToDevicePixel(x)}px`);
+                virtualPopup.style.setProperty('--y', `${snapToDevicePixel(y)}px`);
             });
         });
     }
@@ -191,25 +195,29 @@ const virtualScrollPopup: HTMLElement | null = document.querySelector('#virtual_
 
 document.addEventListener('DOMContentLoaded', (): void => {
     if (virtualScrollBlock && virtualScrollPopup) {
-        virtualScrollBlock.addEventListener('mouseenter', () => {
-            virtualScrollPopup.style.opacity = '1';
-            virtualScrollPopup.style.transform = 'scale(1)';
-        });
+        const snapToDevicePixel = (value: number): number => {
+            const ratio = window.devicePixelRatio || 1;
+            
+            return Math.round(value * ratio) / ratio;
+        };
 
-        virtualScrollBlock.addEventListener('mouseleave', () => {
-            virtualScrollPopup.style.opacity = '0';
-            virtualScrollPopup.style.transform = 'scale(0)';
-        });
+        let lastClientX: number | null = null;
+        let lastClientY: number | null = null;
+        let cleanupAutoUpdate: (() => void) | null = null;
+        let rafId: number | null = null;
+        let scrollRafId: number | null = null;
 
-        virtualScrollBlock.addEventListener('mousemove', ({
-            pageX,
-            pageY,
-            clientX,
-            clientY,
-        }): void => {
+        const calcPosition = () => {
+            if (lastClientX === null || lastClientY === null) {
+                return;
+            }
+
+            const clientX = lastClientX;
+            const clientY = lastClientY;
+            const blockRect = virtualScrollBlock.getBoundingClientRect();
             const virtualEl: VirtualElement = {
-                offsetTop: pageY - virtualScrollBlock.offsetTop + virtualScrollBlock.scrollTop,
-                offsetLeft: pageX - virtualScrollBlock.offsetLeft + virtualScrollBlock.scrollLeft,
+                offsetTop: clientY - blockRect.top + virtualScrollBlock.scrollTop,
+                offsetLeft: clientX - blockRect.left + virtualScrollBlock.scrollLeft,
                 getBoundingClientRect(): VirtualRect {
                     return {
                         x: clientX,
@@ -224,21 +232,66 @@ document.addEventListener('DOMContentLoaded', (): void => {
                 },
             };
 
-            const calcPosition = () => {
-                computePosition(virtualEl, virtualScrollPopup, {
-                    placement: 'right-start',
-                    middleware: [shift(), offset(5)],
-                }).then(({ x, y }) => {
-                    virtualScrollPopup.style.top = `${y}px`;
-                    virtualScrollPopup.style.left = `${x}px`;
-                });
-            };
+            computePosition(virtualEl, virtualScrollPopup, {
+                placement: 'right-start',
+                middleware: [shift(), offset(5)],
+            }).then(({ x, y }) => {
+                virtualScrollPopup.style.top = `${snapToDevicePixel(y)}px`;
+                virtualScrollPopup.style.left = `${snapToDevicePixel(x)}px`;
+            });
+        };
+        const requestCalc = () => {
+            if (rafId !== null) {
+                return;
+            }
 
-            autoUpdate(virtualScrollPopup, () => {
+            rafId = requestAnimationFrame(() => {
+                rafId = null;
                 calcPosition();
             });
+        };
 
-            calcPosition();
+        virtualScrollBlock.addEventListener('mouseenter', () => {
+            virtualScrollPopup.style.opacity = '1';
+        });
+
+        virtualScrollBlock.addEventListener('mouseleave', () => {
+            virtualScrollPopup.style.opacity = '0';
+            lastClientX = null;
+            lastClientY = null;
+        });
+        virtualScrollBlock.addEventListener('scroll', () => {
+            virtualScrollPopup.style.opacity = '0';
+
+            if (scrollRafId !== null) {
+                return;
+            }
+
+            scrollRafId = requestAnimationFrame(() => {
+                scrollRafId = null;
+                
+                if (lastClientX !== null && lastClientY !== null) {
+                    virtualScrollPopup.style.opacity = '1';
+                }
+                
+                requestCalc();
+            });
+        }, { passive: true });
+
+        virtualScrollBlock.addEventListener('mousemove', ({
+            clientX,
+            clientY,
+        }): void => {
+            lastClientX = clientX;
+            lastClientY = clientY;
+
+            if (cleanupAutoUpdate === null) {
+                cleanupAutoUpdate = autoUpdate(virtualScrollBlock, () => {
+                    requestCalc();
+                });
+            }
+
+            requestCalc();
         });
     }
 });
