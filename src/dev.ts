@@ -1,4 +1,4 @@
-import {
+﻿import {
     flip,
     arrow,
     shift,
@@ -11,122 +11,151 @@ import {
     type VirtualElement,
 } from './index';
 
-const placement: HTMLElement | null = document.querySelector('#placement.example');
-const placementReference: HTMLElement | null = document.querySelector('#placement .reference');
-const placementPopup: HTMLElement | null = document.querySelector('#placement .popup');
+const cleanupTasks: Array<() => void> = [];
+const registerCleanup = (cleanup: (() => void) | null | undefined) => {
+    if (cleanup) {
+        cleanupTasks.push(cleanup);
+    }
+};
 
-const placementSetPosition = (reference: HTMLElement, popup: HTMLElement, placement: PlacementType): void => {
-    document.getElementById(placement)?.addEventListener('click', (): void => {
-        if (placementPopup !== null) placementPopup.innerHTML = placement;
+window.addEventListener('beforeunload', () => {
+    cleanupTasks.forEach((cleanup) => cleanup());
+});
+
+const setPopupPosition = (popup: HTMLElement, x: number, y: number) => {
+    popup.style.top = `${y}px`;
+    popup.style.left = `${x}px`;
+};
+const setPopupPositionVars = (popup: HTMLElement, x: number, y: number) => {
+    popup.style.setProperty('--x', `${x}px`);
+    popup.style.setProperty('--y', `${y}px`);
+};
+const snapToDevicePixel = (value: number): number => {
+    const ratio = window.devicePixelRatio || 1;
+
+    return Math.round(value * ratio) / ratio;
+};
+const scrollToCenter = (element: HTMLElement) => {
+    const x = (element.scrollWidth - element.clientWidth) / 2;
+    const y = (element.scrollHeight - element.clientHeight) / 2;
+
+    element.scrollTo(x, y);
+};
+const createVirtualElement = (
+    clientX: number,
+    clientY: number,
+    block: HTMLElement,
+): VirtualElement => {
+    const blockRect = block.getBoundingClientRect();
+    const offsetTop = clientY - blockRect.top + block.scrollTop;
+    const offsetLeft = clientX - blockRect.left + block.scrollLeft;
+
+    return {
+        offsetTop,
+        offsetLeft,
+        getBoundingClientRect(): VirtualRect {
+            return {
+                x: clientX,
+                y: clientY,
+                width: 0,
+                height: 0,
+                top: clientY,
+                right: clientX,
+                bottom: clientY,
+                left: clientX,
+            };
+        },
+    };
+};
+const updateOnAuto = (reference: HTMLElement | VirtualElement, callback: () => void) => {
+    registerCleanup(autoUpdate(reference, callback));
+};
+const setupPlacement = (
+    placement: HTMLElement,
+    reference: HTMLElement,
+    popup: HTMLElement,
+    placementType: PlacementType,
+): void => {
+    document.getElementById(placementType)?.addEventListener('click', (): void => {
+        popup.innerHTML = placementType;
 
         placementTypes.map((x: string) => {
             popup.classList.remove(`popup_${x}`);
             document.getElementById(x)?.querySelector('.button')?.classList.remove('button_active');
         });
-        document.getElementById(placement)?.querySelector('.button')?.classList.add('button_active');
-        popup.classList.add(`popup_${placement}`);
+        
+        document.getElementById(placementType)?.querySelector('.button')?.classList.add('button_active');
+        popup.classList.add(`popup_${placementType}`);
 
         computePosition(reference, popup, {
-            placement: placement,
+            placement: placementType,
             middleware: [offset(5)],
         }).then(({ x, y }): void => {
-            popup.style.top = `${y}px`;
-            popup.style.left = `${x}px`;
+            setPopupPosition(popup, x, y);
         });
     });
 };
 
 document.addEventListener('DOMContentLoaded', (): void => {
-    if (
-        placement !== null
-        && placementReference !== null
-        && placementPopup !== null
-    ) {
+    const placement: HTMLElement | null = document.querySelector('#placement.example');
+    const placementReference: HTMLElement | null = document.querySelector('#placement .reference');
+    const placementPopup: HTMLElement | null = document.querySelector('#placement .popup');
+
+    if (placement && placementReference && placementPopup) {
         placementTypes.map((placementType: string) =>
-            placementSetPosition(placementReference, placementPopup, placementType));
+            setupPlacement(placement, placementReference, placementPopup, placementType));
 
         document.getElementById('top')?.click();
     }
-});
 
-const shiftBlock: HTMLElement | null = document.querySelector('#shift.example');
-const shiftReference: HTMLElement | null = document.querySelector('#shift .reference');
-const shiftPopup: HTMLElement | null = document.querySelector('#shift .popup');
+    const shiftBlock: HTMLElement | null = document.querySelector('#shift.example');
+    const shiftReference: HTMLElement | null = document.querySelector('#shift .reference');
+    const shiftPopup: HTMLElement | null = document.querySelector('#shift .popup');
 
-document.addEventListener('DOMContentLoaded', (): void => {
-    if (
-        shiftBlock !== null
-        && shiftReference !== null
-        && shiftPopup !== null
-    ) {
-        const x: number = (shiftBlock.scrollWidth - shiftBlock.clientWidth) / 2;
-        const y: number = (shiftBlock.scrollHeight - shiftBlock.clientHeight) / 2;
+    if (shiftBlock && shiftReference && shiftPopup) {
+        scrollToCenter(shiftBlock);
 
-        shiftBlock.scrollTo(x, y);
-
-        autoUpdate(shiftReference, () => {
+        updateOnAuto(shiftReference, () => {
             computePosition(shiftReference, shiftPopup, {
                 placement: 'right',
                 middleware: [shift(), offset(5)],
             }).then(({ x, y }): void => {
-                shiftPopup.style.top = `${y}px`;
-                shiftPopup.style.left = `${x}px`;
+                setPopupPosition(shiftPopup, x, y);
             });
         });
     }
-});
 
-const flipBlock: HTMLElement | null = document.querySelector('#flip.example');
-const flipReference: HTMLElement | null = document.querySelector('#flip .reference');
-const flipPopup: HTMLElement | null = document.querySelector('#flip .popup');
+    const flipBlock: HTMLElement | null = document.querySelector('#flip.example');
+    const flipReference: HTMLElement | null = document.querySelector('#flip .reference');
+    const flipPopup: HTMLElement | null = document.querySelector('#flip .popup');
 
-document.addEventListener('DOMContentLoaded', (): void => {
-    if (
-        flipBlock !== null
-        && flipReference !== null
-        && flipPopup !== null
-    ) {
-        const x: number = (flipBlock.scrollWidth - flipBlock.clientWidth) / 2;
-        const y: number = (flipBlock.scrollHeight - flipBlock.clientHeight) / 2;
+    if (flipBlock && flipReference && flipPopup) {
+        scrollToCenter(flipBlock);
 
-        flipBlock.scrollTo(x, y);
-
-        autoUpdate(flipReference, () => {
+        updateOnAuto(flipReference, () => {
             computePosition(flipReference, flipPopup, {
                 placement: 'top',
                 middleware: [offset(5), flip()],
             }).then(({ x, y }): void => {
-                flipPopup.style.top = `${y}px`;
-                flipPopup.style.left = `${x}px`;
+                setPopupPosition(flipPopup, x, y);
             });
         });
     }
-});
 
-const arrowEl: HTMLElement | null = document.querySelector('#arrow .arrow');
-const arrowBlock: HTMLElement | null = document.querySelector('#arrow.example');
-const arrowReference: HTMLElement | null = document.querySelector('#arrow .reference');
-const arrowPopup: HTMLElement | null = document.querySelector('#arrow .popup');
+    const arrowEl: HTMLElement | null = document.querySelector('#arrow .arrow');
+    const arrowBlock: HTMLElement | null = document.querySelector('#arrow.example');
+    const arrowReference: HTMLElement | null = document.querySelector('#arrow .reference');
+    const arrowPopup: HTMLElement | null = document.querySelector('#arrow .popup');
 
-document.addEventListener('DOMContentLoaded', (): void => {
-    if (
-        arrowEl !== null &&
-        arrowBlock !== null &&
-        arrowPopup !== null &&
-        arrowReference !== null
-    ) {
-        const x: number = (arrowBlock.scrollWidth - arrowBlock.clientWidth) / 2;
-        const y: number = (arrowBlock.scrollHeight - arrowBlock.clientHeight) / 2;
+    if (arrowEl && arrowBlock && arrowPopup && arrowReference) {
+        scrollToCenter(arrowBlock);
 
-        arrowBlock.scrollTo(x, y);
-
-        autoUpdate(arrowReference, () => {
+        updateOnAuto(arrowReference, () => {
             computePosition(arrowReference, arrowPopup, {
                 placement: 'left',
                 middleware: [shift(), offset(5), arrow(arrowEl)],
             }).then(({ x, y, middlewareData }): void => {
-                arrowPopup.style.top = `${y}px`;
-                arrowPopup.style.left = `${x}px`;
+                setPopupPosition(arrowPopup, x, y);
 
                 if (middlewareData.arrow) {
                     arrowEl.style.top = `${middlewareData.arrow.y}px`;
@@ -135,19 +164,11 @@ document.addEventListener('DOMContentLoaded', (): void => {
             });
         });
     }
-});
 
-const virtualBlock: HTMLElement | null = document.querySelector('#virtual.example');
-const virtualPopup: HTMLElement | null = document.querySelector('#virtual .popup');
+    const virtualBlock: HTMLElement | null = document.querySelector('#virtual.example');
+    const virtualPopup: HTMLElement | null = document.querySelector('#virtual .popup');
 
-document.addEventListener('DOMContentLoaded', (): void => {
     if (virtualBlock && virtualPopup) {
-        const snapToDevicePixel = (value: number): number => {
-            const ratio = window.devicePixelRatio || 1;
-            
-            return Math.round(value * ratio) / ratio;
-        };
-
         virtualBlock.addEventListener('mouseenter', () => {
             virtualPopup.style.opacity = '1';
         });
@@ -157,50 +178,24 @@ document.addEventListener('DOMContentLoaded', (): void => {
         });
 
         virtualBlock.addEventListener('mousemove', ({
-            pageX,
-            pageY,
             clientX,
             clientY,
         }) => {
-            const virtualEl: VirtualElement = {
-                offsetTop: pageY - virtualBlock.offsetTop,
-                offsetLeft: pageX - virtualBlock.offsetLeft,
-                getBoundingClientRect(): VirtualRect {
-                    return {
-                        x: clientX,
-                        y: clientY,
-                        width: 0,
-                        height: 0,
-                        top: clientY,
-                        right: clientX,
-                        bottom: clientY,
-                        left: clientX,
-                    };
-                },
-            };
+            const virtualEl: VirtualElement = createVirtualElement(clientX, clientY, virtualBlock);
 
             computePosition(virtualEl, virtualPopup, {
                 placement: 'right-start',
                 middleware: [shift({ parent: virtualBlock }), offset(5)],
             }).then(({ x, y }) => {
-                virtualPopup.style.setProperty('--x', `${snapToDevicePixel(x)}px`);
-                virtualPopup.style.setProperty('--y', `${snapToDevicePixel(y)}px`);
+                setPopupPositionVars(virtualPopup, snapToDevicePixel(x), snapToDevicePixel(y));
             });
         });
     }
-});
 
-const virtualScrollBlock: HTMLElement | null = document.querySelector('#virtual_scroll.example');
-const virtualScrollPopup: HTMLElement | null = document.querySelector('#virtual_scroll .popup');
+    const virtualScrollBlock: HTMLElement | null = document.querySelector('#virtual_scroll.example');
+    const virtualScrollPopup: HTMLElement | null = document.querySelector('#virtual_scroll .popup');
 
-document.addEventListener('DOMContentLoaded', (): void => {
     if (virtualScrollBlock && virtualScrollPopup) {
-        const snapToDevicePixel = (value: number): number => {
-            const ratio = window.devicePixelRatio || 1;
-            
-            return Math.round(value * ratio) / ratio;
-        };
-
         let lastClientX: number | null = null;
         let lastClientY: number | null = null;
         let cleanupAutoUpdate: (() => void) | null = null;
@@ -214,30 +209,13 @@ document.addEventListener('DOMContentLoaded', (): void => {
 
             const clientX = lastClientX;
             const clientY = lastClientY;
-            const blockRect = virtualScrollBlock.getBoundingClientRect();
-            const virtualEl: VirtualElement = {
-                offsetTop: clientY - blockRect.top + virtualScrollBlock.scrollTop,
-                offsetLeft: clientX - blockRect.left + virtualScrollBlock.scrollLeft,
-                getBoundingClientRect(): VirtualRect {
-                    return {
-                        x: clientX,
-                        y: clientY,
-                        width: 0,
-                        height: 0,
-                        top: clientY,
-                        right: clientX,
-                        bottom: clientY,
-                        left: clientX,
-                    };
-                },
-            };
+            const virtualEl: VirtualElement = createVirtualElement(clientX, clientY, virtualScrollBlock);
 
             computePosition(virtualEl, virtualScrollPopup, {
                 placement: 'right-start',
                 middleware: [shift(), offset(5)],
             }).then(({ x, y }) => {
-                virtualScrollPopup.style.top = `${snapToDevicePixel(y)}px`;
-                virtualScrollPopup.style.left = `${snapToDevicePixel(x)}px`;
+                setPopupPosition(virtualScrollPopup, snapToDevicePixel(x), snapToDevicePixel(y));
             });
         };
         const requestCalc = () => {
@@ -269,11 +247,11 @@ document.addEventListener('DOMContentLoaded', (): void => {
 
             scrollRafId = requestAnimationFrame(() => {
                 scrollRafId = null;
-                
+
                 if (lastClientX !== null && lastClientY !== null) {
                     virtualScrollPopup.style.opacity = '1';
                 }
-                
+
                 requestCalc();
             });
         }, { passive: true });
@@ -289,9 +267,17 @@ document.addEventListener('DOMContentLoaded', (): void => {
                 cleanupAutoUpdate = autoUpdate(virtualScrollBlock, () => {
                     requestCalc();
                 });
+                registerCleanup(cleanupAutoUpdate);
             }
 
             requestCalc();
+        });
+
+        virtualScrollBlock.addEventListener('mouseleave', () => {
+            if (cleanupAutoUpdate) {
+                cleanupAutoUpdate();
+                cleanupAutoUpdate = null;
+            }
         });
     }
 });
