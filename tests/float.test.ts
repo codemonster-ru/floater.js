@@ -16,6 +16,7 @@ import {
     setScrollPosition,
     setScrollSize,
 } from './dom-helpers';
+import * as floaterExports from '../src/index';
 
 const createElement = (tag = 'div') => document.createElement(tag);
 
@@ -66,6 +67,29 @@ describe('computePosition', () => {
 
         expect(result.x).toBe(70);
         expect(result.y).toBe(30);
+    });
+
+    it('positions correctly for *-end placements', async () => {
+        const parent = setupScrollParent(600, 400);
+        const reference = setupReference(parent, 50, 40, 20, 10);
+        const floating = setupFloating(parent, 100, 30);
+
+        const topEnd = await computePosition(reference, floating, { placement: 'top-end' });
+        const rightEnd = await computePosition(reference, floating, { placement: 'right-end' });
+        const bottomEnd = await computePosition(reference, floating, { placement: 'bottom-end' });
+        const leftEnd = await computePosition(reference, floating, { placement: 'left-end' });
+
+        expect(topEnd.x).toBe(-30);
+        expect(topEnd.y).toBe(10);
+
+        expect(rightEnd.x).toBe(70);
+        expect(rightEnd.y).toBe(20);
+
+        expect(bottomEnd.x).toBe(-30);
+        expect(bottomEnd.y).toBe(50);
+
+        expect(leftEnd.x).toBe(-50);
+        expect(leftEnd.y).toBe(20);
     });
 
     it('applies offset middleware', async () => {
@@ -123,6 +147,32 @@ describe('computePosition', () => {
         });
 
         expect(result.placement).toBeTypeOf('string');
+    });
+
+    it('respects flip placements restriction', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 100, 190, 20, 10);
+        const floating = setupFloating(parent, 80, 30);
+
+        const result = await computePosition(reference, floating, {
+            placement: 'bottom',
+            middleware: [flip({ placements: ['bottom', 'top'] })],
+        });
+
+        expect(result.placement).toBe('top');
+    });
+
+    it('does not flip when the allowed placement does not fit', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 100, 0, 20, 10);
+        const floating = setupFloating(parent, 80, 30);
+
+        const result = await computePosition(reference, floating, {
+            placement: 'bottom',
+            middleware: [flip({ placements: ['top'] })],
+        });
+
+        expect(result.placement).toBe('bottom');
     });
 
     it('provides arrow middleware data', async () => {
@@ -246,5 +296,45 @@ describe('autoUpdate', () => {
         expect(windowAdd).toHaveBeenCalledWith('resize', expect.any(Function), false);
         expect(windowRemove).toHaveBeenCalledWith('scroll', expect.any(Function), false);
         expect(windowRemove).toHaveBeenCalledWith('resize', expect.any(Function), false);
+    });
+});
+
+describe('exports', () => {
+    it('exposes documented stable APIs', () => {
+        expect(floaterExports.computePosition).toBeTypeOf('function');
+        expect(floaterExports.autoUpdate).toBeTypeOf('function');
+        expect(floaterExports.placementTypes).toBeInstanceOf(Array);
+    });
+});
+
+describe('position: fixed behavior', () => {
+    it('treats fixed elements as viewport-based for flip/shift', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 50, 190, 20, 10);
+        const floating = setupFloating(parent, 100, 40);
+        const originalGetComputedStyle = window.getComputedStyle;
+
+        const getComputedStyleSpy = vi.spyOn(window, 'getComputedStyle')
+            .mockImplementation((el: Element) => {
+                const style = originalGetComputedStyle(el);
+
+                if (el === floating) {
+                    return {
+                        ...style,
+                        position: 'fixed',
+                    } as CSSStyleDeclaration;
+                }
+
+                return style;
+            });
+
+        const result = await computePosition(reference, floating, {
+            placement: 'bottom',
+            middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
+        });
+
+        expect(result.placement).toBe('top');
+
+        getComputedStyleSpy.mockRestore();
     });
 });

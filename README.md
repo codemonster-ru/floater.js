@@ -84,10 +84,21 @@ Keeps the floating element inside the visible area.
 
 - `params.parent`: optional container element. If provided, clamping uses that container; otherwise it uses the scroll parent.
 
-### flip()
+### flip(params?)
 
 If the placement is not visible, tries other placements.
 When used together with `shift()`, the fit check ignores `shift()` to avoid picking placements that only fit after shifting.
+
+- `params.placements`: optional list of placements to try, in order. Useful to restrict flipping (e.g. only `top`/`bottom`).
+
+Example: restrict flipping to vertical directions only.
+
+```ts
+computePosition(reference, floating, {
+    placement: 'bottom',
+    middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
+});
+```
 
 ### arrow(arrowEl)
 

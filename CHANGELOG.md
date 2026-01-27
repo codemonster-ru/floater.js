@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2026-01-27
+
+### Fixed
+
+- `computePosition(...)` now applies middleware-updated `placement`, so `flip()` results are reflected in the returned `placement` field.
+- `flip({ placements })` now iterates allowed placements correctly even for short placement lists (e.g. `['bottom', 'top']`).
+- `shift()` and visibility checks now treat `position: fixed` elements as viewport-based, improving `Teleport + fixed` behavior.
+
+### Added
+
+- `flip(params?)` now accepts `params.placements?: PlacementType[]` to restrict which placements can be tried.
+- Tests for `*-end` placements and for restricted `flip({ placements })`.
+
 ## [1.0.2] - 2026-01-27
 
 ### Fixed
