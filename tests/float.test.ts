@@ -414,7 +414,7 @@ describe('position: fixed behavior', () => {
 
         // Simulate scroll moving the reference upward in the viewport.
         setRect(reference, { left: 200, top: 120, width: 20, height: 10 });
-вв
+
         const second = await computePosition(reference, floating, {
             placement: 'bottom',
             strategy: 'fixed',
