@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-01-28
+
+### Added
+
+- `computePosition(..., { strategy: 'fixed' })` to return viewport-based coordinates for fixed/teleported floating elements.
+- Fixed-strategy examples/tests covering viewport resize and reference movement behavior.
+
+### Changed
+
+- README now documents `strategy` and fixed-coordinate behavior.
+- Dev demo for fixed teleport now uses `strategy: 'fixed'`.
+
 ## [1.0.3] - 2026-01-27
 
 ### Fixed
