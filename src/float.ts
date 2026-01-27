@@ -134,6 +134,12 @@ const getElementOffsets = (
         height: rect.height,
     };
 };
+const findMiddleware = (options: OptionType, name: string): MiddlewareType | undefined => {
+    return options.middleware?.find((m: MiddlewareType): boolean => m.name === name);
+};
+const hasMiddleware = (options: OptionType, name: string): boolean => {
+    return !!findMiddleware(options, name);
+};
 const getScrollDirection = (reference: HTMLElement | VirtualElement) => {
     const parent: HTMLElement | null = getScrollParent(reference);
     let scrollDirection: string = '';
@@ -227,7 +233,7 @@ export const flipPosition = ({
     scrollDirection,
 }: MiddlewareParamType): false | MiddlewareOutType => {
     const position: PositionType = getPosition(reference, floating, placement);
-    const offsetMiddleware: MiddlewareType | undefined = options.middleware?.find((m: MiddlewareType): boolean => m.name === 'offset');
+    const offsetMiddleware: MiddlewareType | undefined = findMiddleware(options, 'offset');
 
     if (offsetMiddleware) {
         const offsetResult: MiddlewareOutType = offsetMiddleware.fn({
@@ -327,20 +333,21 @@ export const getOffsetX = (
         xValue = value;
     }
 
-    const arrowMiddleware: MiddlewareType | undefined = options.middleware?.find((m: MiddlewareType): boolean => m.name === 'arrow');
-    const shiftMiddleware: MiddlewareType | undefined = options.middleware?.find((m: MiddlewareType): boolean => m.name === 'shift');
+    const arrowMiddleware: MiddlewareType | undefined = findMiddleware(options, 'arrow');
+    const shiftMiddleware: MiddlewareType | undefined = findMiddleware(options, 'shift');
 
     if (arrowMiddleware) {
         const arrowElement: HTMLElement = arrowMiddleware.params?.arrow as HTMLElement;
+        const arrowRect = arrowElement.getBoundingClientRect();
 
         if (placement.startsWith('right')) {
-            xValue -= arrowElement.getBoundingClientRect().width / 2;
+            xValue -= arrowRect.width / 2;
         } else if (placement.startsWith('left')) {
-            xValue += arrowElement.getBoundingClientRect().width / 2;
+            xValue += arrowRect.width / 2;
         }
     }
 
-    if (options.middleware?.find((m: MiddlewareType): boolean => m.name === 'shift') && arrowMiddleware) {
+    if (hasMiddleware(options, 'shift') && arrowMiddleware) {
         let shiftParent: null | HTMLElement = null;
         let arrowDifferenceWidth: number = 0;
 
@@ -349,8 +356,9 @@ export const getOffsetX = (
         }
 
         const arrowElement: HTMLElement = arrowMiddleware.params?.arrow as HTMLElement;
+        const arrowRect = arrowElement.getBoundingClientRect();
 
-        arrowDifferenceWidth = arrowElement.getBoundingClientRect().width / 2;
+        arrowDifferenceWidth = arrowRect.width / 2;
         arrowDifferenceWidth += getArrowDifferenceWidth(arrowElement);
         arrowDifferenceWidth -= value;
 
@@ -420,20 +428,21 @@ export const getOffsetY = (
         yValue = -value;
     }
 
-    const arrowMiddleware: MiddlewareType | undefined = options.middleware?.find((m: MiddlewareType): boolean => m.name === 'arrow');
-    const shiftMiddleware: MiddlewareType | undefined = options.middleware?.find((m: MiddlewareType): boolean => m.name === 'shift');
+    const arrowMiddleware: MiddlewareType | undefined = findMiddleware(options, 'arrow');
+    const shiftMiddleware: MiddlewareType | undefined = findMiddleware(options, 'shift');
 
     if (arrowMiddleware) {
         const arrowElement: HTMLElement = arrowMiddleware.params?.arrow as HTMLElement;
+        const arrowRect = arrowElement.getBoundingClientRect();
 
         if (placement.startsWith('top')) {
-            yValue += arrowElement.getBoundingClientRect().height / 2;
+            yValue += arrowRect.height / 2;
         } else if (placement.startsWith('bottom')) {
-            yValue -= arrowElement.getBoundingClientRect().height / 2;
+            yValue -= arrowRect.height / 2;
         }
     }
 
-    if (options.middleware?.find((m: MiddlewareType): boolean => m.name === 'shift') && arrowMiddleware) {
+    if (hasMiddleware(options, 'shift') && arrowMiddleware) {
         let shiftParent: null | HTMLElement = null;
         let arrowDifferenceHeight: number = 0;
 
@@ -442,8 +451,9 @@ export const getOffsetY = (
         }
 
         const arrowElement: HTMLElement = arrowMiddleware.params?.arrow as HTMLElement;
+        const arrowRect = arrowElement.getBoundingClientRect();
 
-        arrowDifferenceHeight = arrowElement.getBoundingClientRect().height / 2;
+        arrowDifferenceHeight = arrowRect.height / 2;
         arrowDifferenceHeight += getArrowDifferenceHeight(arrowElement);
         arrowDifferenceHeight -= value;
 
@@ -852,15 +862,15 @@ export const arrow = (arrow: HTMLElement): MiddlewareType => ({
             placement: placement,
         };
 
-        if (!options.middleware?.find((m: MiddlewareType): boolean => m.name === 'offset')) {
+        if (!hasMiddleware(options, 'offset')) {
             result.x = x - getOffsetX(getArrowDifferenceWidth(arrow), options, primaryX, placement, floating);
             result.y = y - getOffsetY(getArrowDifferenceHeight(arrow), options, primaryY, placement, floating);
         }
 
         const arrowPosition: ArrowPositionType = getArrowPosition(result.x, result.y, arrow, floating, reference, placement);
 
-        if (options.middleware?.find((m: MiddlewareType): boolean => m.name === 'shift')) {
-            const offsetMiddleware: MiddlewareType | undefined = options.middleware?.find((m: MiddlewareType): boolean => m.name === 'offset');
+        if (hasMiddleware(options, 'shift')) {
+            const offsetMiddleware: MiddlewareType | undefined = findMiddleware(options, 'offset');
             const offsetValue: number = (offsetMiddleware ? offsetMiddleware.params?.value : 0) as number;
 
             if (arrowPosition.placement.startsWith('top')) {
@@ -1151,7 +1161,7 @@ export const computePosition = (reference: HTMLElement | VirtualElement, floatin
         const primaryY: number = params.y;
         const scrollDirection: string = getScrollDirection(reference);
 
-        options.middleware?.map((x: MiddlewareType) => {
+        options.middleware?.forEach((x: MiddlewareType) => {
             const middleware: MiddlewareOutType = x.fn({
                 x: params.x,
                 y: params.y,
