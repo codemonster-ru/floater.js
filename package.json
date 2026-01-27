@@ -8,7 +8,15 @@
         "type": "git",
         "url": "https://github.com/codemonster-ru/floater.js.git"
     },
-    "keywords": [],
+    "keywords": [
+        "floating-ui",
+        "positioning",
+        "popover",
+        "tooltip",
+        "dropdown",
+        "ui",
+        "dom"
+    ],
     "type": "module",
     "sideEffects": false,
     "main": "./dist/index.ts.umd.js",
