@@ -1,20 +1,38 @@
 name: publish to NPM
 on:
     push:
-        branches:
-            - main
+        tags:
+            - 'v*'
+permissions:
+    contents: write
+    id-token: write
 jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            -   uses: actions/checkout@v4
-            -   uses: actions/setup-node@v4
-                with:
-                    node-version: 20
-                    registry-url: 'https://registry.npmjs.org'
-            -   run: npm ci
-            -   run: npm run build
-            -   run: npm audit signatures
-            -   run: npm publish --access public
-                env:
-                    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  registry-url: 'https://registry.npmjs.org'
+            - run: npm i -g npm@^11.5.1
+            - run: npm -v
+            - run: npm ci
+            - run: npm test
+            - run: npm run build
+            - name: Extract release notes from CHANGELOG
+              id: notes
+              run: |
+                  VERSION="${GITHUB_REF_NAME#v}"
+                  awk -v ver="$VERSION" '
+                      $0 ~ "^## \\[" ver "\\]" {flag=1; next}
+                      flag && $0 ~ "^## \\[" {flag=0}
+                      flag {print}
+                  ' CHANGELOG.md > RELEASE_NOTES.md
+            - name: Create GitHub release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ github.ref_name }}
+                  body_path: RELEASE_NOTES.md
+            - run: npm audit signatures
+            - run: npm publish --access public
