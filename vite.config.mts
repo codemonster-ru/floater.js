@@ -10,8 +10,8 @@ export default defineConfig({
         lib: {
             name: 'index',
             entry: resolve(__dirname, './src/index.ts'),
-            fileName: 'index.ts',
-            formats: ['es', 'umd'],
+            fileName: (format) => (format === 'es' ? 'index.mjs' : 'index.cjs'),
+            formats: ['es', 'cjs'],
         },
         rollupOptions: {
             treeshake: true,
