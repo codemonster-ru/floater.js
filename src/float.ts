@@ -62,7 +62,7 @@ export interface MiddlewareType {
     fn: (params: MiddlewareParamType) => MiddlewareOutType,
     name: string,
     params: {
-        [key: string]: number | never | undefined | HTMLElement;
+        [key: string]: number | never | undefined | HTMLElement | PlacementType[];
     } | undefined,
 }
 
@@ -175,6 +175,13 @@ const getScrollRight = (parent: HTMLElement) => {
 const getScrollBottom = (parent: HTMLElement) => {
     return parent.scrollTop + parent.clientHeight;
 };
+const isFixedPosition = (floating: HTMLElement): boolean => {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+
+    return window.getComputedStyle(floating).position === 'fixed';
+};
 const toShiftTop = (y: number, element: HTMLElement, parent: HTMLElement | null = null) => {
     let scrollTop: number = 0;
 
@@ -262,9 +269,11 @@ export const flipPosition = ({
 
     return false;
 };
-export const flip = (): MiddlewareType => ({
+export const flip = (params?: {
+    placements?: PlacementType[];
+}): MiddlewareType => ({
     name: 'flip',
-    params: {},
+    params: params,
     fn: ({
         x,
         y,
@@ -285,7 +294,7 @@ export const flip = (): MiddlewareType => ({
             ...options,
             middleware: options.middleware?.filter((m: MiddlewareType): boolean => m.name !== 'shift'),
         };
-        let placements: string[] = placementTypes.slice();
+        const allowedPlacements: PlacementType[] = params?.placements ?? placementTypes;
         let positionCalculated: boolean = false;
         const checkPlacement = (placementType: string): void => {
             if (!positionCalculated) {
@@ -310,14 +319,15 @@ export const flip = (): MiddlewareType => ({
                 }
             }
         };
+        const startIndex = allowedPlacements.indexOf(placement as PlacementType);
+        const orderedPlacements = startIndex === -1
+            ? allowedPlacements.slice()
+            : [
+                ...allowedPlacements.slice(startIndex + 1),
+                ...allowedPlacements.slice(0, startIndex),
+            ];
 
-        placements.splice(placements.indexOf(placement), placements.length - 1).map(checkPlacement);
-
-        if (!positionCalculated) {
-            placements = placementTypes.slice();
-
-            placements.splice(0, placements.indexOf(placement)).map(checkPlacement);
-        }
+        orderedPlacements.forEach(checkPlacement);
 
         return result;
     },
@@ -546,7 +556,6 @@ export const shift = (params?: {
         placement,
         reference,
     }: MiddlewareParamType): MiddlewareOutType => {
-        const parent: HTMLElement | null = getScrollParent(floating);
         const result: MiddlewareOutType = {
             x: x,
             y: y,
@@ -567,6 +576,62 @@ export const shift = (params?: {
         const padding = offsetMiddleware ? Math.abs(offsetValue) : 0;
         const marginX = padding;
         const marginY = padding;
+        const fixed = isFixedPosition(floating);
+
+        // For teleported fixed elements, clamp to the viewport rather than a scroll parent.
+        if (fixed && typeof window !== 'undefined' && !params?.parent) {
+            const minX = marginX;
+            const maxXBase = window.innerWidth - floating.clientWidth - marginX;
+            const maxX = maxXBase < minX ? minX : maxXBase;
+            const minY = marginY;
+            const maxYBase = window.innerHeight - floating.clientHeight - marginY;
+            const maxY = maxYBase < minY ? minY : maxYBase;
+
+            if (workingX < minX) {
+                workingX = minX;
+            } else if (workingX > maxX) {
+                workingX = maxX;
+            }
+
+            if (workingY < minY) {
+                workingY = minY;
+            } else if (workingY > maxY) {
+                workingY = maxY;
+            }
+
+            if (applyOffsetLater) {
+                result.x = x + (workingX - adjustedX);
+                result.y = y + (workingY - adjustedY);
+            } else {
+                result.x = workingX;
+                result.y = workingY;
+            }
+
+            const minXFinal = marginX;
+            const maxXFinal = window.innerWidth - floating.clientWidth - marginX;
+            const minYFinal = marginY;
+            const maxYFinal = window.innerHeight - floating.clientHeight - marginY;
+            const minXClamped = applyOffsetLater ? minXFinal + offsetX : minXFinal;
+            const maxXClamped = applyOffsetLater ? maxXFinal + offsetX : maxXFinal;
+            const minYClamped = applyOffsetLater ? minYFinal + offsetY : minYFinal;
+            const maxYClamped = applyOffsetLater ? maxYFinal + offsetY : maxYFinal;
+
+            if (result.x < minXClamped) {
+                result.x = minXClamped;
+            } else if (result.x > maxXClamped) {
+                result.x = maxXClamped;
+            }
+
+            if (result.y < minYClamped) {
+                result.y = minYClamped;
+            } else if (result.y > maxYClamped) {
+                result.y = maxYClamped;
+            }
+
+            return result;
+        }
+
+        const parent: HTMLElement | null = getScrollParent(floating);
 
         if (params?.parent === undefined && parent !== null) {
             const referenceOffsets = getElementOffsets(reference, floating);
@@ -1111,6 +1176,19 @@ export const isVisiblePosition = (
     floating: HTMLElement,
     reference: HTMLElement | VirtualElement,
 ): boolean => {
+    if (isFixedPosition(floating)) {
+        if (typeof window === 'undefined') {
+            return true;
+        }
+
+        const left = position.x;
+        const top = position.y;
+        const right = left + floating.clientWidth;
+        const bottom = top + floating.clientHeight;
+
+        return left >= 0 && top >= 0 && right <= window.innerWidth && bottom <= window.innerHeight;
+    }
+
     const parent: null | HTMLElement = getScrollParent(reference);
 
     if (parent !== null) {
@@ -1180,6 +1258,7 @@ export const computePosition = (reference: HTMLElement | VirtualElement, floatin
 
             params.x = middleware.x;
             params.y = middleware.y;
+            params.placement = middleware.placement;
 
             if (x.name === 'arrow') {
                 middleware.baseX = middleware.x;

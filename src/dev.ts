@@ -1,4 +1,4 @@
-﻿import {
+import {
     flip,
     arrow,
     shift,
@@ -70,6 +70,162 @@ const createVirtualElement = (
 const updateOnAuto = (reference: HTMLElement | VirtualElement, callback: () => void) => {
     registerCleanup(autoUpdate(reference, callback));
 };
+const runFixedTeleportDemo = () => {
+    const host = document.querySelector('#fixed_teleport.example');
+
+    if (!(host instanceof HTMLElement)) {
+        return;
+    }
+
+    const block = document.createElement('div');
+    const panel = document.createElement('div');
+    const toggleLabel = document.createElement('label');
+    const toggle = document.createElement('input');
+    const label = document.createElement('label');
+    const slider = document.createElement('input');
+    const reference = document.createElement('div');
+    const floating = document.createElement('div');
+    const floatingPlacement = document.createElement('div');
+
+    block.id = 'fixed-teleport-block';
+    block.style.position = 'relative';
+    block.style.height = '100%';
+    block.style.padding = '8px';
+    block.style.boxSizing = 'border-box';
+
+    panel.id = 'fixed-teleport-panel';
+    panel.style.position = 'sticky';
+    panel.style.top = '0';
+    panel.style.zIndex = '1';
+    panel.style.padding = '8px 10px';
+    panel.style.background = 'rgba(17, 24, 39, 0.9)';
+    panel.style.color = 'white';
+    panel.style.fontSize = '12px';
+    panel.style.borderRadius = '6px';
+    panel.style.display = 'flex';
+    panel.style.gap = '8px';
+    panel.style.alignItems = 'center';
+
+    toggleLabel.htmlFor = 'fixed-teleport-toggle';
+    toggleLabel.textContent = 'fixed demo';
+    toggleLabel.style.display = 'inline-flex';
+    toggleLabel.style.gap = '6px';
+    toggleLabel.style.alignItems = 'center';
+
+    toggle.id = 'fixed-teleport-toggle';
+    toggle.type = 'checkbox';
+    toggle.checked = false;
+
+    label.htmlFor = 'fixed-teleport-slider';
+    label.textContent = 'ref Y (vh):';
+
+    slider.id = 'fixed-teleport-slider';
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '100';
+    slider.step = '1';
+    slider.value = '92';
+
+    reference.id = 'fixed-teleport-reference';
+    reference.textContent = 'fixed ref';
+    reference.style.position = 'fixed';
+    reference.style.left = '32px';
+    reference.style.width = '96px';
+    reference.style.height = '20px';
+    reference.style.background = '#0ea5e9';
+    reference.style.color = 'white';
+    reference.style.fontSize = '12px';
+    reference.style.zIndex = '9999';
+    reference.style.display = 'none';
+
+    floating.id = 'fixed-teleport-floating';
+    floating.textContent = 'fixed floating';
+    floating.style.position = 'fixed';
+    floating.style.left = '0';
+    floating.style.top = '0';
+    floating.style.width = '160px';
+    floating.style.height = '80px';
+    floating.style.background = '#ef4444';
+    floating.style.color = 'white';
+    floating.style.fontSize = '12px';
+    floating.style.padding = '6px';
+    floating.style.boxSizing = 'border-box';
+    floating.style.zIndex = '9999';
+    floating.style.display = 'none';
+
+    floatingPlacement.id = 'fixed-teleport-floating-placement';
+    floatingPlacement.textContent = 'placement: (pending)';
+    floating.appendChild(floatingPlacement);
+
+    toggleLabel.prepend(toggle);
+    panel.appendChild(toggleLabel);
+    panel.appendChild(label);
+    panel.appendChild(slider);
+
+    block.appendChild(panel);
+    host.appendChild(block);
+
+    // Teleport fixed elements to body, but keep controls inside the scrollable block.
+    document.body.appendChild(reference);
+    document.body.appendChild(floating);
+
+    const setReferenceVh = (vh: number) => {
+        const vhPx = (vh / 100) * window.innerHeight;
+        const maxTop = Math.max(0, window.innerHeight - reference.offsetHeight);
+        const clampedTop = Math.min(Math.max(0, vhPx), maxTop);
+
+        reference.style.top = `${clampedTop}px`;
+    };
+
+    const update = () => {
+        if (!toggle.checked) {
+            reference.style.display = 'none';
+            floating.style.display = 'none';
+
+            return;
+        }
+
+        reference.style.display = 'block';
+        floating.style.display = 'block';
+        computePosition(reference, floating, {
+            placement: 'bottom',
+            middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
+        }).then(({ x, y, placement }) => {
+            setPopupPosition(floating, x, y);
+            floatingPlacement.textContent = `placement: ${placement}`;
+
+            const refRect = reference.getBoundingClientRect();
+            const floatRect = floating.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - refRect.bottom;
+            const spaceAbove = refRect.top;
+
+            console.group('[floater.js] fixed teleport demo');
+            console.log('date', '2026-01-27');
+            console.log('sliderVh', slider.value);
+            console.log('placement', placement);
+            console.log('coords', { x, y });
+            console.log('refRect', refRect);
+            console.log('floatRect', floatRect);
+            console.log('spaceBelow', spaceBelow);
+            console.log('spaceAbove', spaceAbove);
+            console.groupEnd();
+        });
+    };
+
+    slider.addEventListener('input', () => {
+        setReferenceVh(Number(slider.value));
+        update();
+    });
+    toggle.addEventListener('change', () => {
+        setReferenceVh(Number(slider.value));
+        update();
+    });
+
+    // Initialize near the bottom to force a flip when space is insufficient.
+    setReferenceVh(Number(slider.value));
+    registerCleanup(autoUpdate(reference, update));
+    update();
+};
 const setupPlacement = (
     placement: HTMLElement,
     reference: HTMLElement,
@@ -107,6 +263,9 @@ document.addEventListener('DOMContentLoaded', (): void => {
 
         document.getElementById('top')?.click();
     }
+
+    // Teleport + position: fixed demo that should flip upward near the viewport edge.
+    runFixedTeleportDemo();
 
     const shiftBlock: HTMLElement | null = document.querySelector('#shift.example');
     const shiftReference: HTMLElement | null = document.querySelector('#shift .reference');
