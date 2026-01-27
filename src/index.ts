@@ -35,6 +35,7 @@ export {
     getLeftElementPosition,
     isVisiblePosition,
     type OptionType,
+    type StrategyType,
     type ParamsType,
     type PositionType,
     type PlacementType,

@@ -189,6 +189,7 @@ const runFixedTeleportDemo = () => {
         floating.style.display = 'block';
         computePosition(reference, floating, {
             placement: 'bottom',
+            strategy: 'fixed',
             middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
         }).then(({ x, y, placement }) => {
             setPopupPosition(floating, x, y);

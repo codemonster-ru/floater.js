@@ -1,6 +1,6 @@
 {
     "name": "@codemonster-ru/floater.js",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Open source js library to position floating elements.",
     "license": "MIT",
     "author": "Kirill Kolesnikov",

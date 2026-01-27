@@ -53,15 +53,32 @@ Returns a Promise that resolves to `{ x, y, placement, middlewareData }`.
 - `floating`: `HTMLElement`
 - `options.placement`: one of `placementTypes` (default: `bottom`)
 - `options.middleware`: array of middleware
+- `options.strategy`: `'absolute' | 'fixed'` (default: `'absolute'`)
 
 #### Stability contract
 
-- `x` and `y` are coordinates in the floating element's offset parent coordinate space (suitable for `style.left/top`).
+- With `strategy: 'absolute'`, `x` and `y` are coordinates in the floating element's offset parent coordinate space (suitable for `style.left/top`).
+- With `strategy: 'fixed'`, `x` and `y` are viewport coordinates (suitable for `position: fixed` elements teleported to `body`).
 - Middleware runs in the order provided and can change `x`, `y`, and `placement`.
 - `middlewareData[name]` stores the final result returned by that middleware.
 - When `arrow(...)` is used, `middlewareData.arrow` includes:
     - `x` / `y`: arrow coordinates relative to the floating element
     - `baseX` / `baseY`: floating coordinates used for arrow calculation
+
+#### Fixed strategy example (teleport to body)
+
+```ts
+// floating.style.position = 'fixed'
+// document.body.appendChild(floating)
+computePosition(reference, floating, {
+    placement: 'bottom',
+    strategy: 'fixed',
+    middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
+}).then(({ x, y }) => {
+    floating.style.left = `${x}px`;
+    floating.style.top = `${y}px`;
+});
+```
 
 ### placementTypes
 
