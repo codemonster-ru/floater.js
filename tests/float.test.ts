@@ -337,4 +337,90 @@ describe('position: fixed behavior', () => {
 
         getComputedStyleSpy.mockRestore();
     });
+
+    it('supports strategy: fixed for teleported fixed floating near viewport edge', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 200, 760, 20, 10);
+        const floating = setupFloating(parent, 160, 80);
+
+        // Teleport the floating element to body and drop the offset parent.
+        document.body.appendChild(floating);
+        
+        setOffsetParent(floating, null);
+
+        const result = await computePosition(reference, floating, {
+            placement: 'bottom',
+            strategy: 'fixed',
+            middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
+        });
+
+        expect(result.placement).toBe('top');
+        expect(result.y).toBeLessThan(reference.getBoundingClientRect().top);
+    });
+
+    it('reacts to viewport resize when using strategy: fixed', async () => {
+        const originalInnerHeight = window.innerHeight;
+        const originalInnerWidth = window.innerWidth;
+
+        Object.defineProperty(window, 'innerHeight', { configurable: true, value: 300 });
+        Object.defineProperty(window, 'innerWidth', { configurable: true, value: 800 });
+
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 200, 260, 20, 10);
+        const floating = setupFloating(parent, 160, 80);
+
+        document.body.appendChild(floating);
+        
+        setOffsetParent(floating, null);
+
+        const first = await computePosition(reference, floating, {
+            placement: 'bottom',
+            strategy: 'fixed',
+            middleware: [shift()],
+        });
+
+        expect(first.placement).toBe('bottom');
+        expect(first.y).toBe(220);
+
+        Object.defineProperty(window, 'innerHeight', { configurable: true, value: 500 });
+
+        const second = await computePosition(reference, floating, {
+            placement: 'bottom',
+            strategy: 'fixed',
+            middleware: [shift()],
+        });
+
+        expect(second.placement).toBe('bottom');
+        expect(second.y).toBe(270);
+
+        Object.defineProperty(window, 'innerHeight', { configurable: true, value: originalInnerHeight });
+        Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalInnerWidth });
+    });
+
+    it('reacts to reference movement (scroll) when using strategy: fixed', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 200, 300, 20, 10);
+        const floating = setupFloating(parent, 160, 80);
+
+        document.body.appendChild(floating);
+        
+        setOffsetParent(floating, null);
+
+        const first = await computePosition(reference, floating, {
+            placement: 'bottom',
+            strategy: 'fixed',
+            middleware: [shift()],
+        });
+
+        // Simulate scroll moving the reference upward in the viewport.
+        setRect(reference, { left: 200, top: 120, width: 20, height: 10 });
+вв
+        const second = await computePosition(reference, floating, {
+            placement: 'bottom',
+            strategy: 'fixed',
+            middleware: [shift()],
+        });
+
+        expect(second.y).toBeLessThan(first.y);
+    });
 });
