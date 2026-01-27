@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-01-27
+
+### Fixed
+
+- `flip()` now checks whether a placement fits without applying `shift()` during the fit check, preventing false positives when `flip` and `shift` are used together.
+
+### Changed
+
+- The demo now includes a dedicated `Flip + Shift` example in `index.html`.
+
 ## [1.0.1] - 2026-01-27
 
 ### Changed

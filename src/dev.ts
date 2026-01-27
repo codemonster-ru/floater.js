@@ -142,6 +142,23 @@ document.addEventListener('DOMContentLoaded', (): void => {
         });
     }
 
+    const flipShiftBlock: HTMLElement | null = document.querySelector('#flip_shift.example');
+    const flipShiftReference: HTMLElement | null = document.querySelector('#flip_shift .reference');
+    const flipShiftPopup: HTMLElement | null = document.querySelector('#flip_shift .popup');
+
+    if (flipShiftBlock && flipShiftReference && flipShiftPopup) {
+        scrollToCenter(flipShiftBlock);
+
+        updateOnAuto(flipShiftReference, () => {
+            computePosition(flipShiftReference, flipShiftPopup, {
+                placement: 'top',
+                middleware: [offset(5), flip(), shift()],
+            }).then(({ x, y }): void => {
+                setPopupPosition(flipShiftPopup, x, y);
+            });
+        });
+    }
+
     const arrowEl: HTMLElement | null = document.querySelector('#arrow .arrow');
     const arrowBlock: HTMLElement | null = document.querySelector('#arrow.example');
     const arrowReference: HTMLElement | null = document.querySelector('#arrow .reference');

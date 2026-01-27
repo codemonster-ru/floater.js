@@ -281,6 +281,10 @@ export const flip = (): MiddlewareType => ({
             y: y,
             placement: placement,
         };
+        const optionsWithoutShift: OptionType = {
+            ...options,
+            middleware: options.middleware?.filter((m: MiddlewareType): boolean => m.name !== 'shift'),
+        };
         let placements: string[] = placementTypes.slice();
         let positionCalculated: boolean = false;
         const checkPlacement = (placementType: string): void => {
@@ -288,7 +292,7 @@ export const flip = (): MiddlewareType => ({
                 const flipPositioned: false | MiddlewareOutType = flipPosition({
                     x,
                     y,
-                    options,
+                    options: optionsWithoutShift,
                     primaryX,
                     primaryY,
                     floating,

@@ -87,6 +87,7 @@ Keeps the floating element inside the visible area.
 ### flip()
 
 If the placement is not visible, tries other placements.
+When used together with `shift()`, the fit check ignores `shift()` to avoid picking placements that only fit after shifting.
 
 ### arrow(arrowEl)
 
