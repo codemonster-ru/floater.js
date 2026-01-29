@@ -1401,6 +1401,31 @@ export const computePosition = (reference: HTMLElement | VirtualElement, floatin
             params.middlewareData[x.name] = middleware;
         });
 
+        const fallbackPosition: PositionType = getPosition(reference, floating, params.placement, options);
+        const offsetMiddleware: MiddlewareType | undefined = findMiddleware(options, 'offset');
+        const offsetValue: number = (offsetMiddleware ? offsetMiddleware.params?.value : 0) as number;
+
+        if (!Number.isFinite(params.x)) {
+            params.x = fallbackPosition.x;
+        }
+
+        if (!Number.isFinite(params.y)) {
+            if (isFixedStrategy(options, floating)) {
+                const referenceRect = reference.getBoundingClientRect();
+                const floatingHeight = floating.getBoundingClientRect().height;
+
+                if (params.placement.startsWith('top')) {
+                    params.y = referenceRect.top - floatingHeight - offsetValue;
+                } else if (params.placement.startsWith('bottom')) {
+                    params.y = referenceRect.bottom + offsetValue;
+                } else {
+                    params.y = fallbackPosition.y;
+                }
+            } else {
+                params.y = fallbackPosition.y;
+            }
+        }
+
         resolve(params);
     });
 };
