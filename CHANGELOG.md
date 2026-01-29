@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-01-29
+
+### Fixed
+
+- `computePosition` now guarantees numeric `x/y`, adding a fixed-strategy fallback when `y` is not computed.
+
 ## [1.0.4] - 2026-01-28
 
 ### Added
