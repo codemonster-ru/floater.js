@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.7] - 2026-01-30
+
+### Fixed
+
+- Default `flip()` placement selection now follows the canonical placement order (`top` → `top-start` → `top-end` → `right` → `right-start` → `right-end` → `bottom` → `bottom-start` → `bottom-end` → `left` → `left-start` → `left-end`).
+
+### Changed
+
+- `flip` demo now relies on default placement order when `placements` are not provided.
+
 ## [1.0.6] - 2026-01-30
 
 ### Fixed

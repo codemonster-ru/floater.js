@@ -351,70 +351,79 @@ export const flip = (params?: {
             middleware: options.middleware?.filter((m: MiddlewareType): boolean => m.name !== 'shift'),
         };
         const allowedPlacements: PlacementType[] = params?.placements ?? placementTypes;
+        const isDefaultOrder = !params?.placements;
+        const orderedPlacements = isDefaultOrder ? placementTypes : allowedPlacements;
         let positionCalculated: boolean = false;
         const checkPlacement = (placementType: string): void => {
-            if (!positionCalculated) {
-                const flipPositioned: false | MiddlewareOutType = flipPosition({
-                    x,
-                    y,
-                    options: optionsWithoutShift,
-                    primaryX,
-                    primaryY,
-                    floating,
-                    placement: placementType,
-                    reference,
-                    scrollDirection,
-                });
+            if (positionCalculated) {
+                return;
+            }
 
-                if (flipPositioned) {
-                    result.x = flipPositioned.x;
-                    result.y = flipPositioned.y;
-                    result.placement = flipPositioned.placement;
+            const flipPositioned: false | MiddlewareOutType = flipPosition({
+                x,
+                y,
+                options: optionsWithoutShift,
+                primaryX,
+                primaryY,
+                floating,
+                placement: placementType,
+                reference,
+                scrollDirection,
+            });
 
-                    positionCalculated = true;
-                }
+            if (flipPositioned) {
+                result.x = flipPositioned.x;
+                result.y = flipPositioned.y;
+                result.placement = flipPositioned.placement;
+                positionCalculated = true;
             }
         };
         const availableSpace = getAvailableSpace(reference, floating, optionsWithoutShift);
-        const bestFit = allowedPlacements.reduce<{ result: MiddlewareOutType; space: number } | null>(
-            (current, placementType) => {
-                if (positionCalculated) {
+        if (!isDefaultOrder && allowedPlacements.includes(placement as PlacementType)) {
+            checkPlacement(placement);
+        }
+
+        if (!positionCalculated) {
+            orderedPlacements.forEach(checkPlacement);
+        }
+
+        if (!positionCalculated) {
+            const bestFit = allowedPlacements.reduce<{ result: MiddlewareOutType; space: number } | null>(
+                (current, placementType) => {
+                    const flipPositioned: false | MiddlewareOutType = flipPosition({
+                        x,
+                        y,
+                        options: optionsWithoutShift,
+                        primaryX,
+                        primaryY,
+                        floating,
+                        placement: placementType,
+                        reference,
+                        scrollDirection,
+                    });
+
+                    if (!flipPositioned) {
+                        return current;
+                    }
+
+                    const side = getPlacementSide(placementType);
+                    const space = availableSpace[side];
+
+                    if (!current || space > current.space) {
+                        return { result: flipPositioned, space };
+                    }
+
                     return current;
-                }
+                },
+                null,
+            );
 
-                const flipPositioned: false | MiddlewareOutType = flipPosition({
-                    x,
-                    y,
-                    options: optionsWithoutShift,
-                    primaryX,
-                    primaryY,
-                    floating,
-                    placement: placementType,
-                    reference,
-                    scrollDirection,
-                });
-
-                if (!flipPositioned) {
-                    return current;
-                }
-
-                const side = getPlacementSide(placementType);
-                const space = availableSpace[side];
-
-                if (!current || space > current.space) {
-                    return { result: flipPositioned, space };
-                }
-
-                return current;
-            },
-            null,
-        );
-
-        if (bestFit) {
-            result.x = bestFit.result.x;
-            result.y = bestFit.result.y;
-            result.placement = bestFit.result.placement;
-            positionCalculated = true;
+            if (bestFit) {
+                result.x = bestFit.result.x;
+                result.y = bestFit.result.y;
+                result.placement = bestFit.result.placement;
+                positionCalculated = true;
+            }
         }
 
         if (!positionCalculated && allowedPlacements.length > 0) {
