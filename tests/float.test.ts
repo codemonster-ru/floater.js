@@ -520,4 +520,26 @@ describe('flip placement selection', () => {
             restoreWindowSize();
         });
     });
+
+    strategies.forEach((strategy) => {
+        it(`keeps the preferred placement when it fits (${strategy})`, async () => {
+            setWindowSize(300, 200);
+
+            const { reference, floating } = setupFlipScenario(
+                strategy,
+                { left: 120, top: 80, width: 20, height: 10 },
+                { width: 80, height: 40 },
+            );
+
+            const result = await computePosition(reference, floating, {
+                placement: 'top',
+                strategy,
+                middleware: [flip()],
+            });
+
+            expect(result.placement).toBe('top');
+
+            restoreWindowSize();
+        });
+    });
 });
