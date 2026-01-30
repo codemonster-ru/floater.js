@@ -375,15 +375,88 @@ export const flip = (params?: {
                 }
             }
         };
-        const startIndex = allowedPlacements.indexOf(placement as PlacementType);
-        const orderedPlacements = startIndex === -1
-            ? allowedPlacements.slice()
-            : [
-                ...allowedPlacements.slice(startIndex + 1),
-                ...allowedPlacements.slice(0, startIndex),
-            ];
+        const availableSpace = getAvailableSpace(reference, floating, optionsWithoutShift);
+        const bestFit = allowedPlacements.reduce<{ result: MiddlewareOutType; space: number } | null>(
+            (current, placementType) => {
+                if (positionCalculated) {
+                    return current;
+                }
 
-        orderedPlacements.forEach(checkPlacement);
+                const flipPositioned: false | MiddlewareOutType = flipPosition({
+                    x,
+                    y,
+                    options: optionsWithoutShift,
+                    primaryX,
+                    primaryY,
+                    floating,
+                    placement: placementType,
+                    reference,
+                    scrollDirection,
+                });
+
+                if (!flipPositioned) {
+                    return current;
+                }
+
+                const side = getPlacementSide(placementType);
+                const space = availableSpace[side];
+
+                if (!current || space > current.space) {
+                    return { result: flipPositioned, space };
+                }
+
+                return current;
+            },
+            null,
+        );
+
+        if (bestFit) {
+            result.x = bestFit.result.x;
+            result.y = bestFit.result.y;
+            result.placement = bestFit.result.placement;
+            positionCalculated = true;
+        }
+
+        if (!positionCalculated && allowedPlacements.length > 0) {
+            const currentSide = getPlacementSide(placement);
+            let bestSide = currentSide;
+            let bestSpace = availableSpace[currentSide];
+
+            allowedPlacements.forEach((placementType) => {
+                const side = getPlacementSide(placementType);
+                const space = availableSpace[side];
+
+                if (space > bestSpace) {
+                    bestSpace = space;
+                    bestSide = side;
+                }
+            });
+
+            const bestPlacement = getPreferredPlacement(bestSide, placement, allowedPlacements);
+            const fallbackPosition = getPosition(reference, floating, bestPlacement, optionsWithoutShift);
+            const offsetMiddleware: MiddlewareType | undefined = findMiddleware(optionsWithoutShift, 'offset');
+
+            if (offsetMiddleware) {
+                const offsetResult: MiddlewareOutType = offsetMiddleware.fn({
+                    x: fallbackPosition.x,
+                    y: fallbackPosition.y,
+                    options: optionsWithoutShift,
+                    primaryX,
+                    primaryY,
+                    floating,
+                    placement: bestPlacement,
+                    reference,
+                    scrollDirection,
+                });
+
+                fallbackPosition.x = offsetResult.x;
+                fallbackPosition.y = offsetResult.y;
+            }
+
+            result.x = fallbackPosition.x;
+            result.y = fallbackPosition.y;
+            result.placement = fallbackPosition.placement;
+        }
 
         return result;
     },
@@ -1354,6 +1427,67 @@ export const isVisiblePosition = (
     const bottom = top + floating.clientHeight;
 
     return left >= 0 && top >= 0 && right <= viewportWidth && bottom <= viewportHeight;
+};
+const getPlacementSide = (placement: string): 'top' | 'right' | 'bottom' | 'left' => {
+    if (placement.startsWith('right')) {
+        return 'right';
+    }
+
+    if (placement.startsWith('left')) {
+        return 'left';
+    }
+
+    if (placement.startsWith('top')) {
+        return 'top';
+    }
+
+    return 'bottom';
+};
+const getPreferredPlacement = (
+    side: 'top' | 'right' | 'bottom' | 'left',
+    currentPlacement: string,
+    allowedPlacements: PlacementType[],
+): PlacementType => {
+    if (getPlacementSide(currentPlacement) === side && allowedPlacements.includes(currentPlacement as PlacementType)) {
+        return currentPlacement as PlacementType;
+    }
+
+    const match = allowedPlacements.find((placement) => getPlacementSide(placement) === side);
+
+    return (match ?? allowedPlacements[0]) as PlacementType;
+};
+const getAvailableSpace = (
+    reference: HTMLElement | VirtualElement,
+    floating: HTMLElement,
+    options: OptionType = {},
+) => {
+    if (typeof window === 'undefined') {
+        return {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+        };
+    }
+
+    const isFixed = isFixedStrategy(options, floating);
+    const scrollParent = isFixed ? null : getScrollParent(reference);
+    const referenceRect = reference.getBoundingClientRect();
+    const boundaryRect = scrollParent
+        ? scrollParent.getBoundingClientRect()
+        : {
+            top: 0,
+            left: 0,
+            right: window.innerWidth,
+            bottom: window.innerHeight,
+        };
+
+    return {
+        top: referenceRect.top - boundaryRect.top,
+        right: boundaryRect.right - referenceRect.right,
+        bottom: boundaryRect.bottom - referenceRect.bottom,
+        left: referenceRect.left - boundaryRect.left,
+    };
 };
 export const computePosition = (reference: HTMLElement | VirtualElement, floating: HTMLElement, options: OptionType = {}): Promise<ParamsType> => {
     return new Promise((resolve): void => {

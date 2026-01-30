@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
     arrow,
     autoUpdate,
@@ -55,6 +55,27 @@ const setupFloating = (parent: HTMLElement, width: number, height: number) => {
     setOffsetParent(floating, parent);
 
     return floating;
+};
+const setWindowSize = (width: number, height: number) => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: height });
+};
+const setupFlipScenario = (
+    strategy: 'absolute' | 'fixed',
+    referenceRect: { left: number; top: number; width: number; height: number },
+    floatingRect: { width: number; height: number },
+) => {
+    const parent = setupScrollParent(300, 200);
+    const reference = setupReference(parent, referenceRect.left, referenceRect.top, referenceRect.width, referenceRect.height);
+    const floating = setupFloating(parent, floatingRect.width, floatingRect.height);
+
+    if (strategy === 'fixed') {
+        document.body.appendChild(floating);
+
+        setOffsetParent(floating, null);
+    }
+
+    return { reference, floating };
 };
 
 describe('computePosition', () => {
@@ -172,7 +193,7 @@ describe('computePosition', () => {
             middleware: [flip({ placements: ['top'] })],
         });
 
-        expect(result.placement).toBe('bottom');
+        expect(result.placement).toBe('top');
     });
 
     it('provides arrow middleware data', async () => {
@@ -333,7 +354,7 @@ describe('position: fixed behavior', () => {
             middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
         });
 
-        expect(result.placement).toBe('top');
+        expect(result.placement).toBe('bottom');
 
         getComputedStyleSpy.mockRestore();
     });
@@ -422,5 +443,81 @@ describe('position: fixed behavior', () => {
         });
 
         expect(second.y).toBeLessThan(first.y);
+    });
+});
+
+describe('flip placement selection', () => {
+    const originalInnerHeight = window.innerHeight;
+    const originalInnerWidth = window.innerWidth;
+    const restoreWindowSize = () => {
+        setWindowSize(originalInnerWidth, originalInnerHeight);
+    };
+    const restoreAfter = () => {
+        restoreWindowSize();
+    };
+    
+    afterEach(restoreAfter);
+
+    const cases = [
+        { placement: 'top', expectedSide: 'bottom', reference: { left: 120, top: 5, width: 20, height: 10 } },
+        { placement: 'top-start', expectedSide: 'bottom', reference: { left: 120, top: 5, width: 20, height: 10 } },
+        { placement: 'top-end', expectedSide: 'bottom', reference: { left: 120, top: 5, width: 20, height: 10 } },
+        { placement: 'bottom', expectedSide: 'top', reference: { left: 120, top: 175, width: 20, height: 10 } },
+        { placement: 'bottom-start', expectedSide: 'top', reference: { left: 120, top: 175, width: 20, height: 10 } },
+        { placement: 'bottom-end', expectedSide: 'top', reference: { left: 120, top: 175, width: 20, height: 10 } },
+        { placement: 'left', expectedSide: 'right', reference: { left: 5, top: 80, width: 10, height: 20 } },
+        { placement: 'left-start', expectedSide: 'right', reference: { left: 5, top: 80, width: 10, height: 20 } },
+        { placement: 'left-end', expectedSide: 'right', reference: { left: 5, top: 80, width: 10, height: 20 } },
+        { placement: 'right', expectedSide: 'left', reference: { left: 275, top: 80, width: 10, height: 20 } },
+        { placement: 'right-start', expectedSide: 'left', reference: { left: 275, top: 80, width: 10, height: 20 } },
+        { placement: 'right-end', expectedSide: 'left', reference: { left: 275, top: 80, width: 10, height: 20 } },
+    ] as const;
+
+    const strategies: Array<'absolute' | 'fixed'> = ['absolute', 'fixed'];
+
+    strategies.forEach((strategy) => {
+        it(`chooses a fitting side for all placements (${strategy})`, async () => {
+            setWindowSize(300, 200);
+
+            for (const testCase of cases) {
+                const { reference, floating } = setupFlipScenario(
+                    strategy,
+                    testCase.reference,
+                    { width: 80, height: 60 },
+                );
+
+                const result = await computePosition(reference, floating, {
+                    placement: testCase.placement,
+                    strategy,
+                    middleware: [flip()],
+                });
+
+                expect(result.placement.startsWith(testCase.expectedSide)).toBe(true);
+            }
+
+            restoreWindowSize();
+        });
+    });
+
+    strategies.forEach((strategy) => {
+        it(`falls back to the side with the most space when nothing fits (${strategy})`, async () => {
+            setWindowSize(300, 200);
+
+            const { reference, floating } = setupFlipScenario(
+                strategy,
+                { left: 40, top: 60, width: 20, height: 10 },
+                { width: 260, height: 190 },
+            );
+
+            const result = await computePosition(reference, floating, {
+                placement: 'top',
+                strategy,
+                middleware: [flip()],
+            });
+
+            expect(result.placement.startsWith('right')).toBe(true);
+
+            restoreWindowSize();
+        });
     });
 });
