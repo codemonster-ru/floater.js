@@ -8,6 +8,7 @@ import {
     getPosition,
     isVisiblePosition,
     offset,
+    placementTypes,
     shift,
 } from '../src/float';
 import {
@@ -459,21 +460,36 @@ describe('flip placement selection', () => {
     afterEach(restoreAfter);
 
     const cases = [
-        { placement: 'top', expectedSide: 'bottom', reference: { left: 120, top: 5, width: 20, height: 10 } },
-        { placement: 'top-start', expectedSide: 'bottom', reference: { left: 120, top: 5, width: 20, height: 10 } },
-        { placement: 'top-end', expectedSide: 'bottom', reference: { left: 120, top: 5, width: 20, height: 10 } },
-        { placement: 'bottom', expectedSide: 'top', reference: { left: 120, top: 175, width: 20, height: 10 } },
-        { placement: 'bottom-start', expectedSide: 'top', reference: { left: 120, top: 175, width: 20, height: 10 } },
-        { placement: 'bottom-end', expectedSide: 'top', reference: { left: 120, top: 175, width: 20, height: 10 } },
-        { placement: 'left', expectedSide: 'right', reference: { left: 5, top: 80, width: 10, height: 20 } },
-        { placement: 'left-start', expectedSide: 'right', reference: { left: 5, top: 80, width: 10, height: 20 } },
-        { placement: 'left-end', expectedSide: 'right', reference: { left: 5, top: 80, width: 10, height: 20 } },
-        { placement: 'right', expectedSide: 'left', reference: { left: 275, top: 80, width: 10, height: 20 } },
-        { placement: 'right-start', expectedSide: 'left', reference: { left: 275, top: 80, width: 10, height: 20 } },
-        { placement: 'right-end', expectedSide: 'left', reference: { left: 275, top: 80, width: 10, height: 20 } },
+        { placement: 'top', reference: { left: 120, top: 5, width: 20, height: 10 } },
+        { placement: 'top-start', reference: { left: 120, top: 5, width: 20, height: 10 } },
+        { placement: 'top-end', reference: { left: 120, top: 5, width: 20, height: 10 } },
+        { placement: 'bottom', reference: { left: 120, top: 175, width: 20, height: 10 } },
+        { placement: 'bottom-start', reference: { left: 120, top: 175, width: 20, height: 10 } },
+        { placement: 'bottom-end', reference: { left: 120, top: 175, width: 20, height: 10 } },
+        { placement: 'left', reference: { left: 5, top: 80, width: 10, height: 20 } },
+        { placement: 'left-start', reference: { left: 5, top: 80, width: 10, height: 20 } },
+        { placement: 'left-end', reference: { left: 5, top: 80, width: 10, height: 20 } },
+        { placement: 'right', reference: { left: 275, top: 80, width: 10, height: 20 } },
+        { placement: 'right-start', reference: { left: 275, top: 80, width: 10, height: 20 } },
+        { placement: 'right-end', reference: { left: 275, top: 80, width: 10, height: 20 } },
     ] as const;
 
     const strategies: Array<'absolute' | 'fixed'> = ['absolute', 'fixed'];
+    const getFirstVisiblePlacement = (
+        reference: HTMLElement,
+        floating: HTMLElement,
+        options: { strategy?: 'absolute' | 'fixed' },
+    ): string | null => {
+        for (const placement of placementTypes) {
+            const position = getPosition(reference, floating, placement, options);
+
+            if (isVisiblePosition(position, floating, reference, options)) {
+                return placement;
+            }
+        }
+
+        return null;
+    };
 
     strategies.forEach((strategy) => {
         it(`chooses a fitting side for all placements (${strategy})`, async () => {
@@ -492,7 +508,10 @@ describe('flip placement selection', () => {
                     middleware: [flip()],
                 });
 
-                expect(result.placement.startsWith(testCase.expectedSide)).toBe(true);
+                const expected = getFirstVisiblePlacement(reference, floating, { strategy });
+
+                expect(expected).not.toBeNull();
+                expect(result.placement).toBe(expected);
             }
 
             restoreWindowSize();
