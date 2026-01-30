@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.6] - 2026-01-30
+
+### Fixed
+
+- `flip()` now evaluates available space across all directions (including `*-start`/`*-end`) and falls back to the side with the most space when none fit.
+- Fit checks for `flip()` continue to ignore `shift()` to avoid false positives.
+- `strategy: 'fixed'` flip checks now use viewport coordinates for available space.
+
+### Added
+
+- Tests for flip selection across all placements for both `fixed` and `absolute` strategies.
+
+### Changed
+
+- README fixed-strategy example now highlights viewport-based flipping behavior.
+
 ## [1.0.5] - 2026-01-29
 
 ### Fixed

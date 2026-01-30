@@ -68,8 +68,11 @@ Returns a Promise that resolves to `{ x, y, placement, middlewareData }`.
 #### Fixed strategy example (teleport to body)
 
 ```ts
-// floating.style.position = 'fixed'
-// document.body.appendChild(floating)
+floating.style.position = 'fixed';
+document.body.appendChild(floating);
+
+// With strategy: 'fixed', flip() checks space in viewport coordinates
+// and picks the first fitting placement (or the side with the most space).
 computePosition(reference, floating, {
     placement: 'bottom',
     strategy: 'fixed',
