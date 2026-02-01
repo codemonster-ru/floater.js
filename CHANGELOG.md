@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.8] - 2026-02-01
+
+### Fixed
+
+- Build now always emits TypeScript declarations via `tsc`, so `dist/*.d.ts` are generated reliably.
+
+### Changed
+
+- Removed `vite-plugin-dts` in favor of the explicit `tsc` declaration build step.
+- `dev.d.ts` is no longer emitted to `dist` (dev-only entry excluded from declaration output).
+
 ## [1.0.7] - 2026-01-30
 
 ### Fixed

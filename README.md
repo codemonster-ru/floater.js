@@ -167,7 +167,7 @@ const virtualEl: VirtualElement = {
 
 ## TypeScript
 
-The package ships with types. See `index.ts` for full exports.
+The package ships with types generated at build time via `tsc`. See `index.ts` for full exports.
 
 ## Migration notes (0.x -> 1.0)
 
