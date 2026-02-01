@@ -1,6 +1,6 @@
 {
     "name": "@codemonster-ru/floater.js",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "Open source js library to position floating elements.",
     "license": "MIT",
     "author": "Kirill Kolesnikov",
@@ -39,7 +39,7 @@
     ],
     "scripts": {
         "dev": "vite dev",
-        "build": "vite build",
+        "build": "vite build && tsc -p tsconfig.build.json",
         "test": "vitest run"
     },
     "devDependencies": {
@@ -52,7 +52,6 @@
         "prettier": "^3.3.2",
         "typescript": "^5.5.3",
         "vite": "^6.0.11",
-        "vite-plugin-dts": "^4.5.0",
         "vitest": "^2.1.5"
     },
     "vitest": {
