@@ -108,6 +108,7 @@ Keeps the floating element inside the visible area.
 
 If the placement is not visible, tries other placements.
 When used together with `shift()`, the fit check ignores `shift()` to avoid picking placements that only fit after shifting.
+When used together with `offset()`, put `offset()` before `flip()` so the fit check includes the offset.
 
 - `params.placements`: optional list of placements to try, in order. Useful to restrict flipping (e.g. only `top`/`bottom`).
 
