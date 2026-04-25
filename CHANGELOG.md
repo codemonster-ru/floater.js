@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.9] - 2026-04-25
+
+### Added
+
+- Cross-browser Playwright e2e coverage for Chromium, Firefox, WebKit, and a mobile Chromium profile.
+- Dedicated e2e and unit coverage for `visualViewport`-driven update flows.
+- New docs pages for `computePosition`, `autoUpdate`, and per-middleware references (`offset`, `flip`, `shift`, `arrow`).
+
+### Fixed
+
+- `autoUpdate` now listens to `window.visualViewport` `resize`/`scroll` events (when available), improving update reliability on mobile and zoom/viewport-shift scenarios.
+- E2E fixed-placement scenario now adapts to runtime viewport height for stable behavior across desktop/mobile browsers.
+
+### Changed
+
+- Documentation was rewritten to a concise product-style English structure with `getting-started` as the entry point (no docs index page).
+- CI now installs all Playwright browsers and runs full e2e coverage.
+- Release workflow was simplified by removing global `npm` reinstallation in favor of pinned Node setup with npm cache.
+
 ## [1.0.8] - 2026-02-01
 
 ### Fixed
