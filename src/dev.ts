@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', (): void => {
     const placementPopup: HTMLElement | null = document.querySelector('#placement .popup');
 
     if (placement && placementReference && placementPopup) {
-        placementTypes.map((placementType: string) =>
+        placementTypes.map((placementType: PlacementType) =>
             setupPlacement(placement, placementReference, placementPopup, placementType));
 
         document.getElementById('top')?.click();
