@@ -141,6 +141,120 @@ describe('computePosition', () => {
         expect(result.x).toBe(200);
     });
 
+    it('uses ancestor scroll parent for shift even when floating itself is scrollable', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 260, 40, 20, 10);
+        const floating = setupFloating(parent, 100, 30);
+
+        floating.style.overflow = 'scroll';
+        floating.style.overflowX = 'scroll';
+        floating.style.overflowY = 'scroll';
+        setScrollSize(floating, 200, 100);
+        setScrollPosition(floating, 0, 0);
+
+        const result = await computePosition(reference, floating, {
+            placement: 'right',
+            middleware: [shift()],
+        });
+
+        expect(result.x).toBe(200);
+    });
+
+    it('clamps to viewport with shift when no scroll parent is found', async () => {
+        const originalWidth = window.innerWidth;
+        const originalHeight = window.innerHeight;
+
+        setWindowSize(300, 200);
+        const reference = createElement('div');
+        const floating = createElement('div');
+
+        document.body.appendChild(reference);
+        document.body.appendChild(floating);
+
+        setRect(reference, { left: 280, top: 40, width: 20, height: 10 });
+        setRect(floating, { left: 0, top: 0, width: 100, height: 30 });
+        setOffsetParent(floating, null);
+
+        const result = await computePosition(reference, floating, {
+            placement: 'right',
+            middleware: [shift()],
+        });
+
+        expect(result.x).toBe(200);
+        setWindowSize(originalWidth, originalHeight);
+    });
+
+    it('keeps finite coordinates when floating is larger than viewport', async () => {
+        const originalWidth = window.innerWidth;
+        const originalHeight = window.innerHeight;
+
+        setWindowSize(120, 80);
+        const reference = createElement('div');
+        const floating = createElement('div');
+
+        document.body.appendChild(reference);
+        document.body.appendChild(floating);
+
+        setRect(reference, { left: 20, top: 20, width: 10, height: 10 });
+        setRect(floating, { left: 0, top: 0, width: 200, height: 150 });
+        setOffsetParent(floating, null);
+
+        const result = await computePosition(reference, floating, {
+            placement: 'bottom',
+            middleware: [shift()],
+        });
+
+        expect(Number.isFinite(result.x)).toBe(true);
+        expect(Number.isFinite(result.y)).toBe(true);
+        expect(result.x).toBe(0);
+        expect(result.y).toBe(0);
+        setWindowSize(originalWidth, originalHeight);
+    });
+
+    it('checks visibility against ancestor bounds when floating is scrollable', () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 50, 40, 20, 10);
+        const floating = setupFloating(parent, 100, 30);
+
+        floating.style.overflow = 'scroll';
+        floating.style.overflowX = 'scroll';
+        floating.style.overflowY = 'scroll';
+        setScrollSize(floating, 200, 100);
+        setScrollPosition(floating, 0, 0);
+
+        expect(
+            isVisiblePosition(
+                {
+                    x: 200,
+                    y: 20,
+                    placement: 'right',
+                },
+                floating,
+                reference,
+            ),
+        ).toBe(true);
+    });
+
+    it('keeps finite coordinates when floating is larger than custom shift parent', async () => {
+        const parent = setupScrollParent(300, 200);
+        const clampParent = createElement('div');
+        const reference = setupReference(parent, 10, 10, 10, 10);
+        const floating = setupFloating(parent, 180, 150);
+
+        parent.appendChild(clampParent);
+        setRect(clampParent, { left: 0, top: 0, width: 100, height: 80 });
+
+        const result = await computePosition(reference, floating, {
+            placement: 'bottom',
+            middleware: [shift({ parent: clampParent })],
+        });
+
+        expect(Number.isFinite(result.x)).toBe(true);
+        expect(Number.isFinite(result.y)).toBe(true);
+        expect(result.x).toBe(0);
+        expect(result.y).toBe(0);
+    });
+
     it('flips when placement is not visible', async () => {
         const parent = setupScrollParent(300, 200);
         const reference = setupReference(parent, 100, 190, 20, 10);
@@ -158,7 +272,6 @@ describe('computePosition', () => {
             floating,
             placement: 'top',
             reference,
-            scrollDirection: '',
         });
 
         expect(topFlip).not.toBe(false);
@@ -296,6 +409,77 @@ describe('computePosition', () => {
         expect(result.x).toBeGreaterThanOrEqual(145);
         expect(result.y).toBeGreaterThanOrEqual(125);
     });
+
+    it('flips using scroll parent boundaries for virtual elements', async () => {
+        const parent = setupScrollParent(300, 200);
+        const floating = setupFloating(parent, 120, 60);
+        const virtualEl = {
+            offsetTop: 190,
+            offsetLeft: 140,
+            getBoundingClientRect: () => ({
+                x: 140,
+                y: 190,
+                width: 10,
+                height: 10,
+                top: 190,
+                right: 150,
+                bottom: 200,
+                left: 140,
+            }),
+        };
+
+        const result = await computePosition(virtualEl, floating, {
+            placement: 'bottom',
+            middleware: [flip({ placements: ['bottom', 'top'] })],
+        });
+
+        expect(result.placement).toBe('top');
+    });
+
+    it('recomputes after middleware array mutation', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 50, 40, 20, 10);
+        const floating = setupFloating(parent, 100, 30);
+        const middleware = [shift()];
+        const options = {
+            placement: 'right' as const,
+            middleware,
+        };
+
+        const first = await computePosition(reference, floating, options);
+
+        middleware.push(offset(10));
+
+        const second = await computePosition(reference, floating, options);
+
+        expect(first.x).toBe(70);
+        expect(second.x).toBe(80);
+    });
+
+    it('warns and ignores custom middleware using reserved name', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 50, 40, 20, 10);
+        const floating = setupFloating(parent, 100, 30);
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const invalidReservedMiddleware = {
+            name: 'offset',
+            params: {},
+            fn: () => ({
+                x: 9999,
+                y: 9999,
+                placement: 'bottom',
+            }),
+        } as unknown as never;
+
+        const result = await computePosition(reference, floating, {
+            middleware: [invalidReservedMiddleware],
+        });
+
+        expect(result.x).toBe(10);
+        expect(result.y).toBe(50);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('reserved middleware name'));
+        warnSpy.mockRestore();
+    });
 });
 
 describe('autoUpdate', () => {
@@ -318,6 +502,248 @@ describe('autoUpdate', () => {
         expect(windowAdd).toHaveBeenCalledWith('resize', expect.any(Function), false);
         expect(windowRemove).toHaveBeenCalledWith('scroll', expect.any(Function), false);
         expect(windowRemove).toHaveBeenCalledWith('resize', expect.any(Function), false);
+    });
+
+    it('registers and cleans up visualViewport listeners when available', () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 50, 40, 20, 10);
+        const visualViewportMock = new EventTarget() as EventTarget & {
+            addEventListener: typeof window.addEventListener;
+            removeEventListener: typeof window.removeEventListener;
+        };
+        const addSpy = vi.spyOn(visualViewportMock, 'addEventListener');
+        const removeSpy = vi.spyOn(visualViewportMock, 'removeEventListener');
+        const originalDescriptor = Object.getOwnPropertyDescriptor(window, 'visualViewport');
+
+        Object.defineProperty(window, 'visualViewport', {
+            configurable: true,
+            value: visualViewportMock,
+        });
+
+        const cleanup = autoUpdate(reference, () => {});
+
+        cleanup();
+
+        expect(addSpy).toHaveBeenCalledWith('resize', expect.any(Function), false);
+        expect(addSpy).toHaveBeenCalledWith('scroll', expect.any(Function), false);
+        expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function), false);
+        expect(removeSpy).toHaveBeenCalledWith('scroll', expect.any(Function), false);
+
+        if (originalDescriptor) {
+            Object.defineProperty(window, 'visualViewport', originalDescriptor);
+        } else {
+            Reflect.deleteProperty(window, 'visualViewport');
+        }
+    });
+
+    it('registers scroll listeners for nested scroll parents', () => {
+        const outer = setupScrollParent(600, 400);
+        const inner = createElement('div');
+
+        inner.style.overflow = 'scroll';
+        inner.style.overflowX = 'scroll';
+        inner.style.overflowY = 'scroll';
+        outer.appendChild(inner);
+        setRect(inner, { left: 0, top: 0, width: 300, height: 200 });
+        setScrollSize(inner, 600, 400);
+        setScrollPosition(inner, 0, 0);
+
+        const reference = setupReference(inner, 50, 40, 20, 10);
+
+        const outerAdd = vi.spyOn(outer, 'addEventListener');
+        const outerRemove = vi.spyOn(outer, 'removeEventListener');
+        const innerAdd = vi.spyOn(inner, 'addEventListener');
+        const innerRemove = vi.spyOn(inner, 'removeEventListener');
+
+        const cleanup = autoUpdate(reference, () => {});
+
+        cleanup();
+
+        expect(innerAdd).toHaveBeenCalledWith('scroll', expect.any(Function), false);
+        expect(innerRemove).toHaveBeenCalledWith('scroll', expect.any(Function), false);
+        expect(outerAdd).toHaveBeenCalledWith('scroll', expect.any(Function), false);
+        expect(outerRemove).toHaveBeenCalledWith('scroll', expect.any(Function), false);
+    });
+
+    it('batches rapid events into one callback per animation frame', () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 50, 40, 20, 10);
+        const callback = vi.fn();
+        let rafCallback: FrameRequestCallback | null = null;
+        const requestAnimationFrameSpy = vi.spyOn(window, 'requestAnimationFrame')
+            .mockImplementation((cb: FrameRequestCallback): number => {
+                rafCallback = cb;
+
+                return 1;
+            });
+        const cancelAnimationFrameSpy = vi.spyOn(window, 'cancelAnimationFrame')
+            .mockImplementation(() => undefined);
+        const cleanup = autoUpdate(reference, callback);
+
+        parent.dispatchEvent(new Event('scroll'));
+        window.dispatchEvent(new Event('resize'));
+
+        expect(requestAnimationFrameSpy).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveBeenCalledTimes(0);
+
+        if (rafCallback) {
+            rafCallback(0);
+        }
+
+        expect(callback).toHaveBeenCalledTimes(1);
+
+        cleanup();
+
+        expect(cancelAnimationFrameSpy).not.toHaveBeenCalled();
+        requestAnimationFrameSpy.mockRestore();
+        cancelAnimationFrameSpy.mockRestore();
+    });
+
+    it('supports animationFrame polling mode', () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 50, 40, 20, 10);
+        const callback = vi.fn();
+        const frameCallbacks: FrameRequestCallback[] = [];
+        let nextFrameId = 1;
+        const requestAnimationFrameSpy = vi.spyOn(window, 'requestAnimationFrame')
+            .mockImplementation((cb: FrameRequestCallback): number => {
+                frameCallbacks.push(cb);
+
+                return nextFrameId++;
+            });
+        const cancelAnimationFrameSpy = vi.spyOn(window, 'cancelAnimationFrame')
+            .mockImplementation(() => undefined);
+
+        const cleanup = autoUpdate(reference, callback, { animationFrame: true });
+
+        expect(requestAnimationFrameSpy).toHaveBeenCalledTimes(1);
+        parent.dispatchEvent(new Event('scroll'));
+        window.dispatchEvent(new Event('resize'));
+        expect(requestAnimationFrameSpy).toHaveBeenCalledTimes(1);
+
+        const firstFrame = frameCallbacks.shift();
+
+        if (firstFrame) {
+            firstFrame(0);
+        }
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(requestAnimationFrameSpy).toHaveBeenCalledTimes(2);
+
+        cleanup();
+
+        expect(cancelAnimationFrameSpy).toHaveBeenCalledTimes(1);
+        requestAnimationFrameSpy.mockRestore();
+        cancelAnimationFrameSpy.mockRestore();
+    });
+
+    it('limits animationFrame updates with maxFps', () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 50, 40, 20, 10);
+        const callback = vi.fn();
+        const frameCallbacks: FrameRequestCallback[] = [];
+        let nextFrameId = 1;
+        const requestAnimationFrameSpy = vi.spyOn(window, 'requestAnimationFrame')
+            .mockImplementation((cb: FrameRequestCallback): number => {
+                frameCallbacks.push(cb);
+
+                return nextFrameId++;
+            });
+        const cancelAnimationFrameSpy = vi.spyOn(window, 'cancelAnimationFrame')
+            .mockImplementation(() => undefined);
+
+        const cleanup = autoUpdate(reference, callback, { animationFrame: true, maxFps: 30 });
+
+        expect(requestAnimationFrameSpy).toHaveBeenCalledTimes(1);
+
+        const frame1 = frameCallbacks.shift();
+
+        if (frame1) {
+            frame1(0);
+        }
+
+        const frame2 = frameCallbacks.shift();
+
+        if (frame2) {
+            frame2(10);
+        }
+
+        const frame3 = frameCallbacks.shift();
+
+        if (frame3) {
+            frame3(20);
+        }
+
+        const frame4 = frameCallbacks.shift();
+
+        if (frame4) {
+            frame4(40);
+        }
+
+        expect(callback).toHaveBeenCalledTimes(2);
+
+        cleanup();
+
+        expect(cancelAnimationFrameSpy).toHaveBeenCalledTimes(1);
+        requestAnimationFrameSpy.mockRestore();
+        cancelAnimationFrameSpy.mockRestore();
+    });
+
+    it('pauses and resumes animationFrame loop on visibility change', () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 50, 40, 20, 10);
+        const callback = vi.fn();
+        const frameCallbacks: FrameRequestCallback[] = [];
+        let nextFrameId = 1;
+        let visibilityState: DocumentVisibilityState = 'visible';
+        const originalVisibilityDescriptor = Object.getOwnPropertyDescriptor(document, 'visibilityState');
+        const requestAnimationFrameSpy = vi.spyOn(window, 'requestAnimationFrame')
+            .mockImplementation((cb: FrameRequestCallback): number => {
+                frameCallbacks.push(cb);
+
+                return nextFrameId++;
+            });
+        const cancelAnimationFrameSpy = vi.spyOn(window, 'cancelAnimationFrame')
+            .mockImplementation(() => undefined);
+
+        Object.defineProperty(document, 'visibilityState', {
+            configurable: true,
+            get: () => visibilityState,
+        });
+
+        const cleanup = autoUpdate(reference, callback, { animationFrame: true, maxFps: 60 });
+
+        const firstFrame = frameCallbacks.shift();
+
+        if (firstFrame) {
+            firstFrame(0);
+        }
+
+        expect(callback).toHaveBeenCalledTimes(1);
+
+        visibilityState = 'hidden';
+        document.dispatchEvent(new Event('visibilitychange'));
+
+        expect(cancelAnimationFrameSpy).toHaveBeenCalledTimes(1);
+
+        visibilityState = 'visible';
+        document.dispatchEvent(new Event('visibilitychange'));
+
+        const resumedFrame = frameCallbacks.shift();
+
+        if (resumedFrame) {
+            resumedFrame(100);
+        }
+
+        expect(callback).toHaveBeenCalledTimes(2);
+
+        cleanup();
+
+        if (originalVisibilityDescriptor) {
+            Object.defineProperty(document, 'visibilityState', originalVisibilityDescriptor);
+        }
+        requestAnimationFrameSpy.mockRestore();
+        cancelAnimationFrameSpy.mockRestore();
     });
 });
 

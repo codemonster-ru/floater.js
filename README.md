@@ -1,4 +1,4 @@
-﻿# Floater.js
+# Floater.js
 
 ![npm version](https://img.shields.io/npm/v/@codemonster-ru/floater.js)
 ![npm downloads](https://img.shields.io/npm/dm/@codemonster-ru/floater.js)
@@ -61,6 +61,7 @@ Returns a Promise that resolves to `{ x, y, placement, middlewareData }`.
 - With `strategy: 'fixed'`, `x` and `y` are viewport coordinates (suitable for `position: fixed` elements teleported to `body`).
 - Middleware runs in the order provided and can change `x`, `y`, and `placement`.
 - `middlewareData[name]` stores the final result returned by that middleware.
+- Reserved middleware names are `flip`, `offset`, `shift`, `arrow` (custom middleware with these names is ignored with a warning).
 - When `arrow(...)` is used, `middlewareData.arrow` includes:
     - `x` / `y`: arrow coordinates relative to the floating element
     - `baseX` / `baseY`: floating coordinates used for arrow calculation
@@ -128,18 +129,21 @@ Computes arrow position and exposes it through `middlewareData.arrow`.
 - `middlewareData.arrow.x/y`: arrow coordinates relative to the floating element
 - `middlewareData.arrow.baseX/baseY`: floating coordinates used for arrow calculation
 
-### autoUpdate(reference, callback)
+### autoUpdate(reference, callback, floatingOrOptions?, options?)
 
 Watches scroll/resize and calls `callback`.
 Returns a cleanup function to remove listeners.
 
 #### Stability contract
 
-- Listeners are attached to:
-    - the nearest scroll parent (if found)
+- By default (`animationFrame` is not enabled), listeners are attached to:
+    - all scrollable ancestors of `reference` (and optional `floating`)
     - `window` scroll
     - `window` resize
-    - `ResizeObserver` for `reference` when available
+    - `ResizeObserver` for `reference` and optional `floating` when available
+- Optional `animationFrame: true` switches to a per-frame update loop (useful for transform/layout-shift driven movement) and disables the event/observer watchers above.
+- Optional `maxFps` limits update frequency in animation-frame mode (for example, `maxFps: 30`). When omitted, animation-frame mode defaults to `30 FPS`.
+- In animation-frame mode, updates pause on hidden tabs and resume when the tab becomes visible.
 - The returned cleanup function removes all listeners/observers added by `autoUpdate`.
 
 ### VirtualElement

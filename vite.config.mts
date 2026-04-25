@@ -5,6 +5,7 @@ export default defineConfig({
     build: {
         emptyOutDir: true,
         minify: true,
+        target: 'es2020',
         lib: {
             name: 'index',
             entry: resolve(__dirname, './src/index.ts'),
