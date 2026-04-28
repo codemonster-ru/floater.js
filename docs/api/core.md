@@ -1,14 +1,16 @@
 # Core API
 
-This page is the high-level map of Floater.js APIs.
+This page is a high-level map of the public Floater.js API.
 
 ## Primary APIs
 
-- [computePosition](./compute-position.md)
-- [autoUpdate](./auto-update.md)
+- [Compute Position](./compute-position.md)
+- [Auto Update](./auto-update.md)
 - [Middleware API](./middleware.md)
+- [TypeScript API](./typescript.md)
+- [Helpers API](./helpers.md)
 
-## Placement Types
+## Placement types
 
 `placementTypes` exports all supported placements:
 
@@ -17,14 +19,20 @@ This page is the high-level map of Floater.js APIs.
 - `bottom`, `bottom-start`, `bottom-end`
 - `left`, `left-start`, `left-end`
 
-## Visibility Utility
+## Visibility utility
 
 `isVisiblePosition(position, floating, reference, options?)` helps validate whether a calculated position fits the current boundary.
 
 Typical use cases:
 
-- custom fallback placement logic;
-- debugging `flip` and `shift` behavior.
+- custom fallback placement logic
+- debugging `flip` and `shift` behavior
+
+```ts
+const visible = isVisiblePosition(position, floating, reference, {
+    strategy: 'fixed',
+});
+```
 
 ## VirtualElement
 

@@ -2,6 +2,8 @@
 
 Production-ready patterns for common UI scenarios.
 
+All examples assume the floating element has `position: absolute`, unless the recipe sets `position: fixed`.
+
 ## Tooltip
 
 ```ts
@@ -25,10 +27,13 @@ computePosition(reference, floating, {
 computePosition(button, menu, {
     placement: 'bottom-start',
     middleware: [offset(6), flip({ placements: ['bottom-start', 'top-start'] }), shift()],
+}).then(({ x, y }) => {
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
 });
 ```
 
-## Context Menu (VirtualElement)
+## Context menu (VirtualElement)
 
 ```ts
 const pointRef = {
@@ -51,10 +56,13 @@ const pointRef = {
 computePosition(pointRef, menu, {
     placement: 'right-start',
     middleware: [offset(4), flip(), shift()],
+}).then(({ x, y }) => {
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
 });
 ```
 
-## Fixed Portal Popover
+## Fixed portal popover
 
 ```ts
 floating.style.position = 'fixed';
@@ -64,10 +72,13 @@ computePosition(reference, floating, {
     strategy: 'fixed',
     placement: 'bottom',
     middleware: [offset(8), flip(), shift()],
+}).then(({ x, y }) => {
+    floating.style.left = `${x}px`;
+    floating.style.top = `${y}px`;
 });
 ```
 
-## Reactive Updates
+## Reactive updates
 
 ```ts
 const update = () => {
