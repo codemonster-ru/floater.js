@@ -1,4 +1,4 @@
-# shift
+# Shift Middleware
 
 `shift(params?)` keeps the floating element inside visible bounds.
 
@@ -7,6 +7,12 @@
 ```ts
 shift(params?: { parent?: HTMLElement })
 ```
+
+## Parameters
+
+| Parameter | Type          | Description                                           |
+| --------- | ------------- | ----------------------------------------------------- |
+| `parent`  | `HTMLElement` | Optional explicit boundary element used for clamping. |
 
 ## Usage
 
@@ -18,5 +24,6 @@ computePosition(reference, floating, {
 
 ## Notes
 
-- without `parent`, bounds are resolved from scroll parents and viewport;
-- with `parent`, clamping uses that container explicitly.
+- Without `parent`, bounds are resolved from scroll parents and the viewport.
+- With `parent`, clamping uses that container explicitly.
+- `shift` works best after `offset` and `flip`.

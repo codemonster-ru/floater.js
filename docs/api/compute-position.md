@@ -1,4 +1,4 @@
-# computePosition
+# Compute Position
 
 `computePosition(reference, floating, options?)` calculates floating coordinates and resolves middleware output.
 
@@ -14,11 +14,13 @@ computePosition(
 
 ## Options
 
-- `placement?: PlacementType` (default: `bottom`)
-- `middleware?: MiddlewareType[]`
-- `strategy?: 'absolute' | 'fixed'`
+| Option       | Type                    | Default      | Description                                       |
+| ------------ | ----------------------- | ------------ | ------------------------------------------------- |
+| `placement`  | `PlacementType`         | `'bottom'`   | Preferred placement before middleware runs.       |
+| `middleware` | `MiddlewareType[]`      | `[]`         | Middleware stack executed from left to right.     |
+| `strategy`   | `'absolute' \| 'fixed'` | `'absolute'` | Coordinate strategy for the returned `x` and `y`. |
 
-## Return Value
+## Return value
 
 ```ts
 {
@@ -29,12 +31,14 @@ computePosition(
 }
 ```
 
-## Behavior Contract
+## Behavior contract
 
-- middleware runs left-to-right in the provided order;
-- each middleware can update `x`, `y`, and `placement`;
-- each middleware result is available as `middlewareData[name]`;
-- invalid built-in middleware params are sanitized internally.
+- Middleware runs left to right in the provided order.
+- Each middleware can update `x`, `y`, and `placement`.
+- Each middleware result is available as `middlewareData[name]`.
+- Invalid built-in middleware params are sanitized internally and ignored.
+- With `strategy: 'absolute'`, `x` and `y` are resolved in the floating element's offset-parent coordinate space.
+- With `strategy: 'fixed'`, `x` and `y` are resolved in viewport coordinates.
 
 ## Example
 
@@ -48,7 +52,7 @@ computePosition(reference, floating, {
 });
 ```
 
-## Common Pitfalls
+## Common pitfalls
 
 - `floating` must have a valid CSS positioning context (`absolute` or `fixed`).
 - Apply returned `x/y` directly to `left/top`.

@@ -18,9 +18,9 @@ autoUpdate(reference, update, floating, {
 
 ## 2. Minimize layout thrashing
 
-- keep updates focused on `style.left/top` and arrow styles;
-- avoid mixing many reads/writes in the same frame;
-- avoid heavy work inside every `update` call.
+- Keep updates focused on `style.left/top` and arrow styles.
+- Avoid mixing many reads and writes in the same frame.
+- Avoid heavy work inside every `update` call.
 
 ## 3. Always clean up subscriptions
 
@@ -38,7 +38,7 @@ This prevents listener leaks and redundant re-renders.
 Start with:
 
 ```ts
-[offset(8), flip(), shift()]
+[offset(8), flip(), shift()];
 ```
 
 Add `arrow(...)` only when arrow rendering is needed.
@@ -50,7 +50,7 @@ Add `arrow(...)` only when arrow rendering is needed.
 
 ## 6. Production checklist
 
-- every `autoUpdate` has matching cleanup;
-- no redundant `computePosition` calls outside event/frame flow;
-- no excessive custom DOM measurements;
+- Every `autoUpdate` has matching cleanup.
+- There are no redundant `computePosition` calls outside the event or frame flow.
+- Custom DOM measurements are kept small and deliberate.
 - `maxFps` is set when `animationFrame` is enabled.

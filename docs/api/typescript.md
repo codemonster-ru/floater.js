@@ -2,7 +2,7 @@
 
 The package ships with built-in declarations generated at build time (`dist/*.d.ts`).
 
-## Key Types
+## Key types
 
 - `PlacementType`
 - `StrategyType`
@@ -17,15 +17,15 @@ The package ships with built-in declarations generated at build time (`dist/*.d.
 - `VirtualElement`
 - `VirtualRect`
 
-## Core Interfaces
+## Core interfaces
 
 ### OptionType
 
 ```ts
 interface OptionType {
     placement?: PlacementType;
-    middleware?: MiddlewareType[];
-    strategy?: 'absolute' | 'fixed';
+    middleware?: MiddlewareTypes;
+    strategy?: StrategyType;
 }
 ```
 
@@ -51,11 +51,49 @@ interface AutoUpdateOptions {
 }
 ```
 
-## Typing Tips
+### VirtualRect
 
-- type anchor nodes explicitly as `HTMLElement`;
-- use `VirtualElement` for cursor/caret/canvas anchors;
-- guard middleware results before reading optional keys (`if (middlewareData.arrow)`).
+```ts
+interface VirtualRect {
+    [key: string]: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+```
+
+### VirtualElement
+
+```ts
+interface VirtualElement {
+    offsetTop: number;
+    offsetLeft: number;
+    getBoundingClientRect(): VirtualRect;
+}
+```
+
+### MiddlewareType
+
+```ts
+type MiddlewareType =
+    | FlipMiddlewareType
+    | OffsetMiddlewareType
+    | ShiftMiddlewareType
+    | ArrowMiddlewareType
+    | CustomMiddlewareType;
+```
+
+## Typing tips
+
+- Type anchor nodes explicitly as `HTMLElement`.
+- Use `VirtualElement` for cursor, caret, and canvas anchors.
+- Guard middleware results before reading optional keys (`if (middlewareData.arrow)`).
+- Import public types from `@codemonster-ru/floater.js`; do not import from `dist/*` files.
 
 ## Example
 

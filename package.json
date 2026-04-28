@@ -1,7 +1,7 @@
 {
     "name": "@codemonster-ru/floater.js",
-    "version": "1.0.9",
-    "description": "Open source js library to position floating elements.",
+    "version": "1.0.10",
+    "description": "Tiny TypeScript positioning library for tooltips, popovers, dropdowns, and context menus.",
     "license": "MIT",
     "author": "Kirill Kolesnikov",
     "repository": {
@@ -10,10 +10,13 @@
     },
     "keywords": [
         "floating-ui",
+        "floating",
         "positioning",
         "popover",
         "tooltip",
         "dropdown",
+        "context-menu",
+        "typescript",
         "ui",
         "dom"
     ],
