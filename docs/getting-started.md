@@ -4,10 +4,10 @@ Floater.js is a tiny positioning library for tooltips, popovers, dropdowns, and 
 
 Use it when you need:
 
-- predictable floating element positioning;
-- fallback placement logic (`flip`);
-- boundary clamping (`shift`);
-- reactive updates on scroll/resize (`autoUpdate`).
+- predictable floating element positioning
+- fallback placement logic with `flip`
+- boundary clamping with `shift`
+- reactive updates on scroll and resize with `autoUpdate`
 
 ## Installation
 
@@ -15,7 +15,7 @@ Use it when you need:
 npm i @codemonster-ru/floater.js
 ```
 
-## First Integration
+## First integration
 
 ```ts
 import { computePosition, offset, flip, shift, arrow, autoUpdate } from '@codemonster-ru/floater.js';
@@ -45,10 +45,10 @@ update();
 // Call cleanup() when the floating UI is hidden/unmounted.
 ```
 
-## Positioning Strategy
+## Positioning strategy
 
-- `absolute` (default): coordinates are resolved in offset-parent space.
-- `fixed`: coordinates are viewport-based.
+- `absolute` (default): coordinates are resolved in offset-parent space
+- `fixed`: coordinates are resolved in viewport space
 
 Use `fixed` for teleported overlays attached to `document.body`:
 
@@ -63,17 +63,21 @@ computePosition(reference, floating, {
 });
 ```
 
-## SSR Usage
+## SSR usage
 
 Floater.js can be imported in SSR environments, but DOM-dependent APIs should run only in the browser.
 
-- Safe on server: module import.
-- Client-only: `computePosition(...)`, `autoUpdate(...)`.
+- Safe on the server: module imports
+- Client-only: `computePosition(...)`, `autoUpdate(...)`
 
-## Next Steps
+## Next steps
 
-- Core API overview: [Core API](./api/core.md)
-- `computePosition` in detail: [compute-position](./api/compute-position.md)
-- `autoUpdate` in detail: [auto-update](./api/auto-update.md)
-- Middleware guide: [Middleware API](./api/middleware.md)
-- Practical examples: [Recipes](./guides/recipes.md)
+- [Documentation overview](./index.md)
+- [Core API](./api/core.md)
+- [Compute Position](./api/compute-position.md)
+- [Auto Update](./api/auto-update.md)
+- [Middleware API](./api/middleware.md)
+- [TypeScript API](./api/typescript.md)
+- [Recipes](./guides/recipes.md)
+- [Performance](./guides/performance.md)
+- [Troubleshooting](./guides/troubleshooting.md)

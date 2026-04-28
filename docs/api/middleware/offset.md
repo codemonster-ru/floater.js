@@ -1,4 +1,4 @@
-# offset
+# Offset Middleware
 
 `offset(value)` shifts floating coordinates away from the reference.
 
@@ -7,6 +7,12 @@
 ```ts
 offset(value: number)
 ```
+
+## Parameters
+
+| Parameter | Type     | Description                                                                                 |
+| --------- | -------- | ------------------------------------------------------------------------------------------- |
+| `value`   | `number` | Distance in pixels. Positive values move the floating element away from the reference side. |
 
 ## Usage
 
@@ -18,5 +24,5 @@ computePosition(reference, floating, {
 
 ## Notes
 
-- positive values increase distance from the anchor side;
-- place `offset` before `flip` and `shift` for predictable behavior.
+- Place `offset` before `flip` and `shift` so fallback checks and boundary clamping include the offset.
+- Invalid values such as `NaN` or `Infinity` are ignored by middleware sanitization.
