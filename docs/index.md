@@ -2,6 +2,8 @@
 
 `@codemonster-ru/floater.js` is a lightweight TypeScript positioning engine for tooltips, popovers, dropdowns, and context menus.
 
+Interactive playground examples are available directly inside the Markdown docs pages.
+
 Use this documentation as a linear path:
 
 1. Install and ship a first working integration.
