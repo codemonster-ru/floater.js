@@ -44,13 +44,11 @@
         "dev": "vite dev",
         "build": "vite build && tsc -p tsconfig.build.json",
         "test": "vitest run",
-        "test:e2e": "npm run build && playwright test -c playwright.config.mjs",
         "lint": "eslint src tests --ext .ts",
         "test:dist": "node scripts/test-dist-exports.mjs",
         "check": "npm run lint && npm test && npm run build && npm run test:dist"
     },
     "devDependencies": {
-        "@playwright/test": "^1.55.1",
         "@types/node": "^20.14.10",
         "@typescript-eslint/eslint-plugin": "^7.16.0",
         "@typescript-eslint/parser": "^7.18.0",
