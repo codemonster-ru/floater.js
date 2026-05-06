@@ -1,8 +1,8 @@
 # Core API
 
-This page is a high-level map of the public Floater.js API.
+The Floater.js public API is intentionally small and composable.
 
-## Primary APIs
+## Entry Points
 
 - [Compute Position](./compute-position.md)
 - [Auto Update](./auto-update.md)
@@ -10,7 +10,7 @@ This page is a high-level map of the public Floater.js API.
 - [TypeScript API](./typescript.md)
 - [Helpers API](./helpers.md)
 
-## Placement types
+## Placement Types
 
 `placementTypes` exports all supported placements:
 
@@ -19,38 +19,33 @@ This page is a high-level map of the public Floater.js API.
 - `bottom`, `bottom-start`, `bottom-end`
 - `left`, `left-start`, `left-end`
 
-## Visibility utility
+## Virtual Reference
 
-`isVisiblePosition(position, floating, reference, options?)` helps validate whether a calculated position fits the current boundary.
-
-Typical use cases:
-
-- custom fallback placement logic
-- debugging `flip` and `shift` behavior
-
-```ts
-const visible = isVisiblePosition(position, floating, reference, {
-    strategy: 'fixed',
-});
-```
-
-## VirtualElement
-
-Use `VirtualElement` for non-DOM anchors (mouse pointer, editor caret, canvas geometry):
+Use `VirtualElement` for non-DOM reference points such as cursor points, editor carets, or canvas coordinates.
 
 ```ts
 interface VirtualElement {
-    offsetTop: number;
-    offsetLeft: number;
-    getBoundingClientRect(): {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        top: number;
-        right: number;
-        bottom: number;
-        left: number;
-    };
+  offsetTop: number;
+  offsetLeft: number;
+  getBoundingClientRect(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
 }
+```
+
+## Visibility Check
+
+`isVisiblePosition(position, floating, reference, options?)` validates whether a candidate position fits current bounds.
+
+```ts
+const visible = isVisiblePosition(position, floating, reference, {
+  strategy: 'fixed',
+});
 ```
