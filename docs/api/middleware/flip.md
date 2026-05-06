@@ -1,6 +1,6 @@
-# Flip Middleware
+# Flip
 
-`flip(params?)` tries alternative placements when the current one does not fit.
+`flip(params?)` tries alternative placements when the current placement does not fit.
 
 ## Signature
 
@@ -10,19 +10,30 @@ flip(params?: { placements?: PlacementType[] })
 
 ## Parameters
 
-| Parameter    | Type              | Description                                 |
-| ------------ | ----------------- | ------------------------------------------- |
-| `placements` | `PlacementType[]` | Optional ordered list of placements to try. |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `placements` | `PlacementType[]` | Optional ordered fallback list. |
 
-## Usage
+## Return Value
+
+Returns a flip middleware object for `computePosition(..., { middleware })`.
+
+## Behavior
+
+- Without `placements`, the internal full fallback order is used.
+- With `placements`, fallback is restricted to that list.
+- Works best after `offset` and before `shift`.
+
+## Example
 
 ```ts
-flip({ placements: ['bottom', 'top'] });
+computePosition(reference, floating, {
+  placement: 'bottom',
+  middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
+});
 ```
 
-## Notes
+## Common Pitfalls
 
-- Without `placements`, the full internal placement order is used.
-- With `placements`, fallback is limited to that set.
-- When `shift()` is also present, `flip()` checks placement fit without `shift()` so it does not pick a placement that only fits after clamping.
-- Put `offset()` before `flip()` when the offset should be part of the fit check.
+- Overly restrictive `placements` arrays that remove valid fallbacks.
+- Running `flip` before `offset` when offset must be part of fit checks.

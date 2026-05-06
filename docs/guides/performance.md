@@ -1,28 +1,28 @@
 # Performance
 
-Guidelines for stable and efficient floating UI updates.
+Guidelines for stable and efficient floating-element updates.
 
-## 1. Limit update frequency
+## 1. Limit Update Frequency
 
-For animation-heavy UI, use animation frame mode with `maxFps`:
+For animation-heavy interfaces, use animation frame mode with `maxFps`:
 
 ```ts
 autoUpdate(reference, update, floating, {
-    animationFrame: true,
-    maxFps: 30,
+  animationFrame: true,
+  maxFps: 30,
 });
 ```
 
-- `30 FPS` is usually enough for floating UI.
-- Use `60` only if lower FPS causes visible stepping.
+- `30 FPS` is usually enough.
+- Use `60` only when lower FPS causes visible stepping.
 
-## 2. Minimize layout thrashing
+## 2. Minimize Layout Thrashing
 
-- Keep updates focused on `style.left/top` and arrow styles.
-- Avoid mixing many reads and writes in the same frame.
-- Avoid heavy work inside every `update` call.
+- Keep updates focused on `style.left/top` and arrow positioning.
+- Avoid heavy read/write mixing in a single frame.
+- Keep non-positioning work outside `update`.
 
-## 3. Always clean up subscriptions
+## 3. Always Cleanup
 
 ```ts
 const cleanup = autoUpdate(reference, update, floating);
@@ -31,9 +31,7 @@ const cleanup = autoUpdate(reference, update, floating);
 cleanup();
 ```
 
-This prevents listener leaks and redundant re-renders.
-
-## 4. Keep middleware stack simple
+## 4. Keep Middleware Simple
 
 Start with:
 
@@ -41,16 +39,16 @@ Start with:
 [offset(8), flip(), shift()];
 ```
 
-Add `arrow(...)` only when arrow rendering is needed.
+Add `arrow(...)` only when needed.
 
-## 5. Pick the right strategy
+## 5. Choose Correct Strategy
 
-- `absolute`: default and often cheaper.
-- `fixed`: better for body-level portals and complex scroll trees.
+- `absolute`: default and usually cheaper.
+- `fixed`: best for `document.body` portals and complex scroll trees.
 
-## 6. Production checklist
+## 6. Production Checklist
 
-- Every `autoUpdate` has matching cleanup.
-- There are no redundant `computePosition` calls outside the event or frame flow.
-- Custom DOM measurements are kept small and deliberate.
+- Every `autoUpdate` has matching cleanup function calls.
+- No redundant `computePosition` loops outside intended flow.
+- Custom DOM measurement logic remains minimal.
 - `maxFps` is set when `animationFrame` is enabled.

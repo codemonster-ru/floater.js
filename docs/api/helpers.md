@@ -1,10 +1,10 @@
 # Helpers API
 
-Floater.js exports low-level helpers for advanced positioning and debugging.
+Floater.js exposes low-level helpers for advanced geometry workflows.
 
-Most applications should use `computePosition` and built-in middleware. Use helpers when you are building custom middleware, debug tooling, or behavior that needs direct geometry access.
+Most applications should use `computePosition` with built-in middleware. Use helpers for custom middleware, diagnostics, or custom geometry pipelines.
 
-## Position helpers
+## Position Helpers
 
 - `getPosition(...)`
 - `getTopPosition(...)`
@@ -24,16 +24,14 @@ Most applications should use `computePosition` and built-in middleware. Use help
 - `getBottomElementPosition(...)`
 - `getLeftElementPosition(...)`
 
-These helpers return a `PositionType` or a numeric edge coordinate based on the reference, floating element, placement, and strategy options.
-
-## Offset helpers
+## Offset Helpers
 
 - `getOffsetX(...)`
 - `getOffsetY(...)`
 
-Use these helpers only when implementing offset-aware custom positioning. Standard spacing should use the [offset middleware](./middleware/offset.md).
+For standard spacing behavior, prefer [offset middleware](./middleware/offset.md).
 
-## Arrow helpers
+## Arrow Helpers
 
 - `getArrowPosition(...)`
 - `getTopArrowPosition(...)`
@@ -43,26 +41,20 @@ Use these helpers only when implementing offset-aware custom positioning. Standa
 - `getArrowDifferenceWidth(...)`
 - `getArrowDifferenceHeight(...)`
 
-Arrow helpers return `ArrowPositionType` values or measurement differences used to compensate for transformed arrow geometry.
-
 ## Example
 
 ```ts
 const base = getPosition(reference, floating, 'bottom-start', {
-    strategy: 'fixed',
+  strategy: 'fixed',
 });
 
 const arrowPosition = getArrowPosition(base.x, base.y, arrowEl, floating, reference, base.placement, {
-    strategy: 'fixed',
+  strategy: 'fixed',
 });
 ```
 
-## When to use
+## Use Helpers When
 
-Use these helpers when you need:
-
-- custom geometry logic on top of core API
-- deep debugging for placement differences
-- custom middleware or debug overlays
-
-For standard UI behavior, prefer `computePosition` + built-in middleware.
+- You are writing custom geometry logic.
+- You need deep placement diagnostics.
+- You are building custom middleware or custom floating behaviors.

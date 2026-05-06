@@ -1,4 +1,4 @@
-# Offset Middleware
+# Offset
 
 `offset(value)` shifts floating coordinates away from the reference.
 
@@ -10,19 +10,28 @@ offset(value: number)
 
 ## Parameters
 
-| Parameter | Type     | Description                                                                                 |
-| --------- | -------- | ------------------------------------------------------------------------------------------- |
-| `value`   | `number` | Distance in pixels. Positive values move the floating element away from the reference side. |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `value` | `number` | Distance in pixels. Positive values move the floating element away from the reference side. |
 
-## Usage
+## Return Value
+
+Returns an offset middleware object for `computePosition(..., { middleware })`.
+
+## Behavior
+
+- Applies distance before fallback and boundary checks.
+- Should run before `flip` and `shift` in most stacks.
+
+## Example
 
 ```ts
 computePosition(reference, floating, {
-    middleware: [offset(8), flip(), shift()],
+  middleware: [offset(8), flip(), shift()],
 });
 ```
 
-## Notes
+## Common Pitfalls
 
-- Place `offset` before `flip` and `shift` so fallback checks and boundary clamping include the offset.
-- Invalid values such as `NaN` or `Infinity` are ignored by middleware sanitization.
+- Passing non-finite values (`NaN`, `Infinity`).
+- Placing `offset` after `flip` when offset should be included in fit checks.

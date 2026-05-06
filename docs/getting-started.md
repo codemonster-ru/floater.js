@@ -1,13 +1,6 @@
 # Getting Started
 
-Floater.js is a tiny positioning library for tooltips, popovers, dropdowns, and context menus.
-
-Use it when you need:
-
-- predictable floating element positioning
-- fallback placement logic with `flip`
-- boundary clamping with `shift`
-- reactive updates on scroll and resize with `autoUpdate`
+Floater.js computes robust coordinates for floating elements relative to reference elements.
 
 ## Installation
 
@@ -15,69 +8,64 @@ Use it when you need:
 npm i @codemonster-ru/floater.js
 ```
 
-## First integration
+## Quick Start
 
 ```ts
-import { computePosition, offset, flip, shift, arrow, autoUpdate } from '@codemonster-ru/floater.js';
+import { autoUpdate, computePosition, flip, offset, shift } from '@codemonster-ru/floater.js';
 
 const reference = document.querySelector('#reference') as HTMLElement;
 const floating = document.querySelector('#floating') as HTMLElement;
-const arrowEl = document.querySelector('#arrow') as HTMLElement;
 
-const update = () => {
-    computePosition(reference, floating, {
-        placement: 'bottom',
-        middleware: [offset(8), flip(), shift(), arrow(arrowEl)],
-    }).then(({ x, y, middlewareData }) => {
-        floating.style.left = `${x}px`;
-        floating.style.top = `${y}px`;
+const update = async () => {
+  const { x, y } = await computePosition(reference, floating, {
+    placement: 'bottom-start',
+    middleware: [offset(8), flip(), shift({ padding: 8 })],
+  });
 
-        if (middlewareData.arrow) {
-            arrowEl.style.left = `${middlewareData.arrow.x}px`;
-            arrowEl.style.top = `${middlewareData.arrow.y}px`;
-        }
-    });
+  floating.style.left = `${x}px`;
+  floating.style.top = `${y}px`;
 };
 
 const cleanup = autoUpdate(reference, update, floating);
 update();
 
-// Call cleanup() when the floating UI is hidden/unmounted.
+// Call cleanup() when the floating element is hidden or unmounted.
 ```
 
-## Positioning strategy
+## Positioning Lifecycle
 
-- `absolute` (default): coordinates are resolved in offset-parent space
-- `fixed`: coordinates are resolved in viewport space
+1. Call `computePosition(reference, floating, options)`.
+2. Apply the returned coordinates (`x`, `y`) to your floating element.
+3. Keep coordinates fresh with `autoUpdate(...)` while the floating element is visible.
+4. Always dispose with the `cleanup` callback.
 
-Use `fixed` for teleported overlays attached to `document.body`:
+## Strategy: Absolute vs Fixed
+
+- `absolute` (default): best for floating elements within positioned layout containers.
+- `fixed`: best for floating elements rendered in `document.body` or other viewport-level layers.
 
 ```ts
 floating.style.position = 'fixed';
 document.body.appendChild(floating);
 
-computePosition(reference, floating, {
-    strategy: 'fixed',
-    placement: 'bottom',
-    middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
+await computePosition(reference, floating, {
+  strategy: 'fixed',
+  placement: 'bottom',
+  middleware: [offset(8), flip(), shift()],
 });
 ```
 
-## SSR usage
+## SSR Boundary
 
-Floater.js can be imported in SSR environments, but DOM-dependent APIs should run only in the browser.
+- Safe on server: importing the package.
+- Browser-only: DOM-dependent calls such as `computePosition(...)` and `autoUpdate(...)`.
 
-- Safe on the server: module imports
-- Client-only: `computePosition(...)`, `autoUpdate(...)`
+Run DOM logic only after mount (or inside client-only branches).
 
-## Next steps
+## Where To Next
 
-- [Documentation overview](./index.md)
 - [Core API](./api/core.md)
 - [Compute Position](./api/compute-position.md)
-- [Auto Update](./api/auto-update.md)
 - [Middleware API](./api/middleware.md)
-- [TypeScript API](./api/typescript.md)
 - [Recipes](./guides/recipes.md)
-- [Performance](./guides/performance.md)
-- [Troubleshooting](./guides/troubleshooting.md)
+- [Performance Guide](./guides/performance.md)

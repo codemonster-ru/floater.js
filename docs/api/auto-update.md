@@ -1,6 +1,6 @@
 # Auto Update
 
-`autoUpdate` keeps floating coordinates in sync with layout changes.
+`autoUpdate(reference, callback, floatingOrOptions?, options?)` subscribes to layout and viewport changes and calls `callback` when position should be recomputed.
 
 ## Signature
 
@@ -8,53 +8,63 @@
 autoUpdate(reference, callback, floatingOrOptions?, options?) => () => void
 ```
 
-Returns a `cleanup` function that must be called when UI is hidden or unmounted.
-
 ## Parameters
 
-| Parameter           | Type                                                  | Description                                                               |
-| ------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------- |
-| `reference`         | `HTMLElement \| { getBoundingClientRect(): unknown }` | Anchor element or virtual reference.                                      |
-| `callback`          | `() => void`                                          | Function called when the position should be recomputed.                   |
-| `floatingOrOptions` | `HTMLElement \| AutoUpdateOptions`                    | Optional floating element, or options when no floating element is needed. |
-| `options`           | `AutoUpdateOptions`                                   | Options used when `floatingOrOptions` is a floating element.              |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `reference` | `HTMLElement \| { getBoundingClientRect(): unknown }` | Reference element or virtual reference. |
+| `callback` | `() => void` | Function that recomputes and applies position. |
+| `floatingOrOptions` | `HTMLElement \| AutoUpdateOptions` | Floating element or options (when element is omitted). |
+| `options` | `AutoUpdateOptions` | Options when `floatingOrOptions` is an element. |
 
-## Modes
+## Return Value
 
-### Event mode (default)
+Returns a `cleanup` function. Call it when the floating element is hidden or unmounted.
 
-Subscribes to:
+## Behavior
 
-- scroll events of reference and floating scroll parents
-- `window` scroll and resize
-- `window.visualViewport` resize and scroll when available
-- `ResizeObserver` for reference and floating elements when available
+### Event Mode (Default)
 
-### Animation frame mode
+Subscribes to scroll/resize sources and `ResizeObserver` when available.
+
+### Animation Frame Mode
 
 ```ts
 autoUpdate(reference, update, floating, {
-    animationFrame: true,
-    maxFps: 30,
+  animationFrame: true,
+  maxFps: 30,
 });
 ```
 
-Use animation frame mode for transform-driven movement or heavily animated anchors. In this mode, event and observer subscriptions are not used.
-
-When `maxFps` is omitted, animation frame mode defaults to `30`.
+Use for transform-driven or continuously animated reference elements.
 
 ## Options
 
 ```ts
 interface AutoUpdateOptions {
-    animationFrame?: boolean;
-    maxFps?: number;
+  animationFrame?: boolean;
+  maxFps?: number;
 }
 ```
 
-## Best practices
+## Example
 
-- Use default mode for most tooltips and dropdowns.
-- Use `animationFrame` only when event mode is not enough.
-- Keep `maxFps` conservative (`30` is often enough).
-- Always call `cleanup`.
+```ts
+const update = async () => {
+  const { x, y } = await computePosition(reference, floating, {
+    placement: 'bottom-start',
+    middleware: [offset(8), flip(), shift({ padding: 8 })],
+  });
+
+  floating.style.left = `${x}px`;
+  floating.style.top = `${y}px`;
+};
+
+const cleanup = autoUpdate(reference, update, floating);
+```
+
+## Common Pitfalls
+
+- Forgetting to call `cleanup` on hide/unmount.
+- Using animation-frame mode when event mode is already sufficient.
+- Running heavy non-positioning logic inside `callback`.

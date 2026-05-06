@@ -1,6 +1,6 @@
-# Arrow Middleware
+# Arrow
 
-`arrow(arrowElement)` computes arrow coordinates and stores them in `middlewareData.arrow`.
+`arrow(arrowElement)` computes arrow coordinates and writes them to `middlewareData.arrow`.
 
 ## Signature
 
@@ -10,33 +10,41 @@ arrow(arrowElement: HTMLElement)
 
 ## Parameters
 
-| Parameter      | Type          | Description                                         |
-| -------------- | ------------- | --------------------------------------------------- |
-| `arrowElement` | `HTMLElement` | Arrow element rendered inside the floating element. |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `arrowElement` | `HTMLElement` | Arrow node rendered inside the floating element. |
 
-## Usage
+## Return Value
+
+Returns an arrow middleware object for `computePosition(..., { middleware })`.
+
+## Behavior
+
+- Computes arrow coordinates from the final floating geometry.
+- Exposes coordinates as `middlewareData.arrow`.
+- Should run after `offset`, `flip`, and `shift`.
+
+## Output
+
+- `middlewareData.arrow.x`: Arrow `left` coordinate.
+- `middlewareData.arrow.y`: Arrow `top` coordinate.
+- `middlewareData.arrow.baseX`: Base floating `x` used for arrow calculation.
+- `middlewareData.arrow.baseY`: Base floating `y` used for arrow calculation.
+
+## Example
 
 ```ts
 computePosition(reference, floating, {
-    middleware: [offset(8), flip(), shift(), arrow(arrowEl)],
+  middleware: [offset(8), flip(), shift(), arrow(arrowEl)],
 }).then(({ middlewareData }) => {
-    if (middlewareData.arrow) {
-        arrowEl.style.left = `${middlewareData.arrow.x}px`;
-        arrowEl.style.top = `${middlewareData.arrow.y}px`;
-    }
+  if (middlewareData.arrow) {
+    arrowEl.style.left = `${middlewareData.arrow.x}px`;
+    arrowEl.style.top = `${middlewareData.arrow.y}px`;
+  }
 });
 ```
 
-## Output fields
+## Common Pitfalls
 
-| Field                        | Description                                                    |
-| ---------------------------- | -------------------------------------------------------------- |
-| `middlewareData.arrow.x`     | Arrow `left` coordinate.                                       |
-| `middlewareData.arrow.y`     | Arrow `top` coordinate.                                        |
-| `middlewareData.arrow.baseX` | Floating element `x` coordinate used during arrow calculation. |
-| `middlewareData.arrow.baseY` | Floating element `y` coordinate used during arrow calculation. |
-
-## Notes
-
-- Place `arrow(...)` after `offset`, `flip`, and `shift` so it uses the final floating geometry.
-- Guard `middlewareData.arrow` before reading it, especially when middleware stacks are dynamic.
+- Running `arrow(...)` before geometry middleware (`offset`, `flip`, `shift`).
+- Reading `middlewareData.arrow` without a guard in dynamic middleware stacks.

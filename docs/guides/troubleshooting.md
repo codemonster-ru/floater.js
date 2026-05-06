@@ -1,53 +1,52 @@
 # Troubleshooting
 
-## Floating element is rendered in the wrong place
+## Floating Element Renders In Wrong Place
 
 Check:
 
-- `floating` has the correct CSS `position` (`absolute` or `fixed`).
+- Floating node uses `position: absolute` or `position: fixed`.
 - `options.strategy` matches actual layout behavior.
-- Returned `x/y` values are applied directly to `left/top`.
+- Returned `x/y` are applied directly to `left/top`.
 
-## `flip()` does not pick the expected side
+## Flip Selects Unexpected Side
 
 Check:
 
 - Middleware order uses `offset` before `flip`.
-- `flip({ placements: [...] })` is not restricting fallback too much.
-- There is enough available space in the allowed directions.
+- `flip({ placements: [...] })` is not overly restrictive.
+- There is enough available space in allowed directions.
 
-## `shift()` clamps too aggressively
-
-Check:
-
-- `parent` is not too small.
-- Nested containers do not create unexpected scroll boundaries.
-- A large `offset` is not influencing resulting bounds.
-
-## Arrow is visually misaligned
+## Shift Clamps Too Aggressively
 
 Check:
 
-- `arrow(arrowElement)` is included in middleware.
-- `middlewareData.arrow.x/y` values are applied to the arrow element.
-- Arrow CSS size matches expected geometry.
+- `parent` boundary is not too small.
+- Nested scroll containers are expected.
+- Large `offset` is not over-constraining geometry.
 
-## Position does not update on scroll/resize
+## Arrow Looks Misaligned
 
 Check:
 
-- `autoUpdate(...)` is being used.
+- `arrow(arrowElement)` is in middleware chain.
+- `middlewareData.arrow.x/y` are applied to arrow styles.
+- Arrow dimensions in CSS match expected geometry.
+
+## Position Does Not Update On Scroll/Resize
+
+Check:
+
+- `autoUpdate(...)` is used while floating element is visible.
 - `cleanup` is not called too early.
-- `ResizeObserver` exists in the runtime.
-- `animationFrame` mode is used for transform-driven motion.
+- `animationFrame` mode is enabled for transform-driven motion.
 
-## Console warnings about middleware
+## Middleware Warnings In Console
 
-Floater.js sanitizes invalid middleware stacks intentionally.
+Floater.js intentionally sanitizes invalid middleware input.
 
 Common causes:
 
 - Custom middleware uses reserved names.
-- `offset` value is not finite.
+- `offset` value is non-finite.
 - `shift.parent` is not an `HTMLElement`.
 - `arrow` argument is not an `HTMLElement`.
