@@ -10,6 +10,78 @@ npm i @codemonster-ru/floater.js
 
 ## Quick Start
 
+Interactive example (runs directly in docs):
+
+````playground-src
+framework: vanilla
+height: 360
+entry: /main.js
+
+```html file=/index.html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Floater.js Quick Start</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="stage">
+      <button id="reference" class="reference">Toggle tooltip</button>
+      <div id="floating" class="floating" hidden>
+        Positioned by Floater.js
+      </div>
+    </div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
+```
+
+```css file=/styles.css
+* { box-sizing: border-box; }
+body { margin: 0; font-family: ui-sans-serif, system-ui, sans-serif; }
+.stage { min-height: 300px; display: grid; place-items: center; background: #f5f8fc; position: relative; }
+.reference { border: 0; background: #1b6ed6; color: #fff; border-radius: 10px; padding: 10px 14px; cursor: pointer; }
+.floating { position: absolute; left: 0; top: 0; background: #123765; color: #fff; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+```
+
+```js file=/main.js
+import { autoUpdate, computePosition, flip, offset, shift } from '@codemonster-ru/floater.js';
+
+const reference = document.querySelector('#reference');
+const floating = document.querySelector('#floating');
+
+let cleanup = null;
+
+const update = async () => {
+  const { x, y } = await computePosition(reference, floating, {
+    placement: 'bottom-start',
+    middleware: [offset(8), flip(), shift({ padding: 8 })],
+  });
+
+  floating.style.left = `${x}px`;
+  floating.style.top = `${y}px`;
+};
+
+reference.addEventListener('click', async () => {
+  if (!floating.hidden) {
+    floating.hidden = true;
+    cleanup?.();
+    cleanup = null;
+    return;
+  }
+
+  floating.hidden = false;
+  await update();
+
+  cleanup?.();
+  cleanup = autoUpdate(reference, update, floating);
+});
+```
+
+````
+
 ```ts
 import { autoUpdate, computePosition, flip, offset, shift } from '@codemonster-ru/floater.js';
 
