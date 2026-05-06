@@ -1,29 +1,39 @@
-# Shift Middleware
+# Shift
 
-`shift(params?)` keeps the floating element inside visible bounds.
+`shift(params?)` keeps the floating element within visible bounds.
 
 ## Signature
 
 ```ts
-shift(params?: { parent?: HTMLElement })
+shift(params?: { parent?: HTMLElement; padding?: number })
 ```
 
 ## Parameters
 
-| Parameter | Type          | Description                                           |
-| --------- | ------------- | ----------------------------------------------------- |
-| `parent`  | `HTMLElement` | Optional explicit boundary element used for clamping. |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `parent` | `HTMLElement` | Optional explicit boundary element. |
+| `padding` | `number` | Optional viewport/boundary padding in pixels. |
 
-## Usage
+## Return Value
+
+Returns a shift middleware object for `computePosition(..., { middleware })`.
+
+## Behavior
+
+- Without `parent`, bounds come from viewport and scroll containers.
+- Clamps coordinates to keep the floating element visible.
+- Works best after `offset` and `flip`.
+
+## Example
 
 ```ts
 computePosition(reference, floating, {
-    middleware: [offset(8), flip(), shift()],
+  middleware: [offset(8), flip(), shift({ padding: 8 })],
 });
 ```
 
-## Notes
+## Common Pitfalls
 
-- Without `parent`, bounds are resolved from scroll parents and the viewport.
-- With `parent`, clamping uses that container explicitly.
-- `shift` works best after `offset` and `flip`.
+- Using a `parent` boundary that is too small for expected placements.
+- Large offsets that force frequent clamping.

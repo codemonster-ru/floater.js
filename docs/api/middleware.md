@@ -1,54 +1,45 @@
 # Middleware API
 
-Middleware is applied inside `computePosition(..., { middleware })` from left to right.
+Middleware is executed inside `computePosition(..., { middleware })` from left to right.
 
-## Built-in middleware
+## Built-In Middleware
 
-- [Offset Middleware](./middleware/offset.md)
-- [Flip Middleware](./middleware/flip.md)
-- [Shift Middleware](./middleware/shift.md)
-- [Arrow Middleware](./middleware/arrow.md)
+- [Offset](./middleware/offset.md)
+- [Flip](./middleware/flip.md)
+- [Shift](./middleware/shift.md)
+- [Arrow](./middleware/arrow.md)
 
-## Recommended order
+## Recommended Order
 
 ```ts
 [offset(8), flip(), shift(), arrow(arrowEl)];
 ```
 
-Start with `offset`, then run fallback placement with `flip`, clamp the result with `shift`, and calculate arrow coordinates last.
+This order preserves expected geometry: distance, fallback side, boundary clamping, then arrow alignment.
 
-## Why order matters
-
-- `offset` changes the base distance from the reference.
-- `flip` chooses the most suitable side.
-- `shift` clamps the result to visible bounds.
-- `arrow` resolves arrow coordinates from the final geometry.
-
-## Custom middleware
-
-Custom middleware receives the current positioning state and returns a new state:
+## Custom Middleware
 
 ```ts
 const customMiddleware = {
-    name: 'snapToPixel',
-    fn: ({ x, y, placement }) => ({
-        x: Math.round(x),
-        y: Math.round(y),
-        placement,
-    }),
+  name: 'snapToPixel',
+  fn: ({ x, y, placement }) => ({
+    x: Math.round(x),
+    y: Math.round(y),
+    placement,
+  }),
 };
 ```
 
-Custom middleware names must not use reserved built-in names.
+Custom middleware names must not conflict with reserved built-in names.
 
-## Validation rules
+## Validation Rules
 
 Floater.js sanitizes invalid middleware input:
 
-- reserved names (`flip`, `offset`, `shift`, `arrow`) are blocked for custom middleware
-- invalid params for built-ins are ignored
-- warnings are emitted through `console.warn`
+- Reserved names (`flip`, `offset`, `shift`, `arrow`) are blocked for custom middleware.
+- Invalid built-in parameters are ignored.
+- Warnings are emitted through `console.warn`.
 
-## Low-level utility
+## Low-Level Utility
 
-`flipPosition(...)` is exposed for advanced custom placement flows, but most applications should use `flip(...)`.
+`flipPosition(...)` is exposed for advanced placement flows, but in most cases `flip(...)` is preferred.
