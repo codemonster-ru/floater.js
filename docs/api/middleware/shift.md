@@ -13,7 +13,7 @@ shift(params?: { parent?: HTMLElement; padding?: number })
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `parent` | `HTMLElement` | Optional explicit boundary element. |
-| `padding` | `number` | Optional viewport/boundary padding in pixels. Must be finite and non-negative. |
+| `padding` | `number` | Optional viewport/boundary padding in pixels. |
 
 ## Return Value
 
@@ -22,8 +22,6 @@ Returns a shift middleware object for `computePosition(..., { middleware })`.
 ## Behavior
 
 - Without `parent`, bounds come from viewport and scroll containers.
-- When `padding` is set, bounds are inset by that value.
-- When `padding` is omitted, `shift` keeps the previous behavior and uses `Math.abs(offset)` as padding if an `offset` middleware is present.
 - Clamps coordinates to keep the floating element visible.
 - Works best after `offset` and `flip`.
 
@@ -32,41 +30,119 @@ Returns a shift middleware object for `computePosition(..., { middleware })`.
 Interactive demo:
 
 ````playground-src
-framework: vanilla
+mode: component
+framework: vue
 height: 360
-entry: /main.js
+entry: /App.vue
 
-```html file=/index.html
-<!doctype html>
-<html><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /><link rel="stylesheet" href="/styles.css" /></head><body><div class="stage"><button id="reference" class="ref">Shift boundary</button><div id="floating" class="float">kept in bounds</div></div><script type="module" src="/main.js"></script></body></html>
-```
+```vue file=/App.vue
+<template>
+  <section
+    ref="stage"
+    class="stage"
+    :style="{
+      height: '100%',
+      minHeight: '240px',
+      overflow: 'auto',
+      position: 'relative'
+    }"
+  >
+    <div :style="contentStyle">
+      <VfButton ref="reference" type="button" :style="referenceStyle">
+        Reference
+      </VfButton>
 
-```css file=/styles.css
-body{margin:0;font-family:ui-sans-serif,system-ui,sans-serif}.stage{min-height:300px;padding:16px;position:relative;overflow:hidden;background:#f7f7fb}.ref{position:absolute;right:12px;bottom:18px;padding:10px 14px;border:0;border-radius:10px;background:#5a53d6;color:#fff}.float{position:absolute;left:0;top:0;padding:8px 10px;border-radius:8px;background:#2d2a80;color:#fff}
-```
+      <VfCard
+        ref="floating"
+        compact
+        class="float"
+        :style="floatingStyle"
+      >
+        requested: top
+        <br />
+        placement stays, coordinates shift
+      </VfCard>
+    </div>
+  </section>
+</template>
 
-```js file=/main.js
-import { computePosition, flip, offset, shift } from '@codemonster-ru/floater.js';
+<script setup>
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computePosition, offset, shift } from '@codemonster-ru/floater.js'
+import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
 
-const reference = document.querySelector('#reference');
-const floating = document.querySelector('#floating');
+const getEl = (value) => value?.$el ?? value
+const stage = ref(null)
+const reference = ref(null)
+const floating = ref(null)
+const referenceTop = 420
+const coordinates = ref({ x: 0, y: 0 })
+const contentStyle = {
+  height: '720px',
+  position: 'relative'
+}
+const referenceStyle = {
+  position: 'absolute',
+  left: '50%',
+  top: `${referenceTop}px`,
+  transform: 'translateX(-50%)',
+  zIndex: '2'
+}
+const floatingStyle = computed(() => ({
+  position: 'absolute',
+  left: `${coordinates.value.x}px`,
+  top: `${coordinates.value.y}px`,
+  width: '220px',
+  padding: '8px 10px',
+  background: 'var(--vf-color-surface-muted)',
+  zIndex: '1'
+}))
 
-computePosition(reference, floating, {
-  placement: 'right-start',
-  middleware: [offset(8), flip(), shift({ padding: 12 })],
-}).then(({ x, y }) => {
-  floating.style.left = `${x}px`;
-  floating.style.top = `${y}px`;
-});
+const update = async () => {
+  await nextTick()
+
+  const referenceEl = getEl(reference.value)
+  const floatingEl = getEl(floating.value)
+  if (!referenceEl || !floatingEl) {
+    return
+  }
+
+  const { x, y } = await computePosition(referenceEl, floatingEl, {
+    placement: 'top',
+    middleware: [offset(8), shift({ padding: 12 })]
+  })
+
+  coordinates.value = { x, y }
+}
+
+const onViewportChange = () => {
+  void update()
+}
+
+onMounted(async () => {
+  await nextTick()
+
+  const stageEl = stage.value
+  const referenceEl = getEl(reference.value)
+  if (stageEl && referenceEl) {
+    stageEl.scrollTop = referenceEl.offsetTop - (stageEl.clientHeight - referenceEl.offsetHeight) / 2
+    stageEl.addEventListener('scroll', onViewportChange)
+  }
+
+  window.addEventListener('resize', onViewportChange)
+  window.addEventListener('scroll', onViewportChange, true)
+  await update()
+})
+
+onBeforeUnmount(() => {
+  stage.value?.removeEventListener('scroll', onViewportChange)
+  window.removeEventListener('resize', onViewportChange)
+  window.removeEventListener('scroll', onViewportChange, true)
+})
+</script>
 ```
 
 ````
-
-```ts
-computePosition(reference, floating, {
-  middleware: [offset(8), flip(), shift({ padding: 8 })],
-});
-```
 
 ## Common Pitfalls
 
