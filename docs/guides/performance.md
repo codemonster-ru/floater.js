@@ -43,8 +43,9 @@ Add `arrow(...)` only when needed.
 
 ## 5. Choose Correct Strategy
 
-- `absolute`: default and usually cheaper.
+- `absolute`: usually cheaper for positioned layout containers.
 - `fixed`: best for `document.body` portals and complex scroll trees.
+- Default is auto-detected from the floating element CSS position.
 
 ## 6. Production Checklist
 

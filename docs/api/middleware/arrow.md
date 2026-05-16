@@ -12,7 +12,7 @@ arrow(arrowElement: HTMLElement)
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `arrowElement` | `HTMLElement` | Arrow node rendered inside the floating element. |
+| `arrowElement` | `HTMLElement` | Arrow node to position. It does not have to be a child of the floating element. |
 
 ## Return Value
 
@@ -22,12 +22,13 @@ Returns an arrow middleware object for `computePosition(..., { middleware })`.
 
 - Computes arrow coordinates from the final floating geometry.
 - Exposes coordinates as `middlewareData.arrow`.
+- `middlewareData.arrow.x/y` are in the same coordinate space where the returned floating `left/top` are applied.
 - Should run after `offset`, `flip`, and `shift`.
 
 ## Output
 
-- `middlewareData.arrow.x`: Arrow `left` coordinate.
-- `middlewareData.arrow.y`: Arrow `top` coordinate.
+- `middlewareData.arrow.x`: Arrow `left` coordinate in floating coordinate space.
+- `middlewareData.arrow.y`: Arrow `top` coordinate in floating coordinate space.
 - `middlewareData.arrow.baseX`: Base floating `x` used for arrow calculation.
 - `middlewareData.arrow.baseY`: Base floating `y` used for arrow calculation.
 
