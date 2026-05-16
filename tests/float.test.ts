@@ -11,6 +11,7 @@ import {
     placementTypes,
     shift,
 } from '../src/float';
+import type { MiddlewareType } from '../src/float';
 import {
     setOffsetParent,
     setRect,
@@ -227,7 +228,6 @@ describe('computePosition', () => {
                 {
                     x: 200,
                     y: 20,
-                    placement: 'right',
                 },
                 floating,
                 reference,
@@ -344,6 +344,19 @@ describe('computePosition', () => {
         expect(result.x).toBe(195);
     });
 
+    it('uses explicit shift padding instead of offset padding', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 280, 60, 20, 10);
+        const floating = setupFloating(parent, 100, 30);
+
+        const result = await computePosition(reference, floating, {
+            placement: 'right',
+            middleware: [shift({ padding: 12 }), offset(5)],
+        });
+
+        expect(result.x).toBe(188);
+    });
+
     it('keeps offset padding on the top edge with shift + offset', async () => {
         const parent = setupScrollParent(300, 200);
         const reference = setupReference(parent, 120, 0, 20, 10);
@@ -355,6 +368,35 @@ describe('computePosition', () => {
         });
 
         expect(result.y).toBe(5);
+    });
+
+    it('uses explicit shift padding without offset', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 280, 60, 20, 10);
+        const floating = setupFloating(parent, 100, 30);
+
+        const result = await computePosition(reference, floating, {
+            placement: 'right',
+            middleware: [shift({ padding: 12 })],
+        });
+
+        expect(result.x).toBe(188);
+    });
+
+    it('warns and ignores shift middleware with invalid padding', async () => {
+        const parent = setupScrollParent(300, 200);
+        const reference = setupReference(parent, 280, 60, 20, 10);
+        const floating = setupFloating(parent, 100, 30);
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+        const result = await computePosition(reference, floating, {
+            placement: 'right',
+            middleware: [shift({ padding: -1 })],
+        });
+
+        expect(result.x).toBe(300);
+        expect(warnSpy).toHaveBeenCalledWith('[floater.js] shift middleware expects params.padding to be a finite non-negative number. Middleware was ignored.');
+        warnSpy.mockRestore();
     });
 
     it('keeps arrow coordinates within floating bounds when shifted', async () => {
@@ -440,7 +482,7 @@ describe('computePosition', () => {
         const parent = setupScrollParent(300, 200);
         const reference = setupReference(parent, 50, 40, 20, 10);
         const floating = setupFloating(parent, 100, 30);
-        const middleware = [shift()];
+        const middleware: MiddlewareType[] = [shift()];
         const options = {
             placement: 'right' as const,
             middleware,
@@ -569,13 +611,8 @@ describe('autoUpdate', () => {
         const parent = setupScrollParent(300, 200);
         const reference = setupReference(parent, 50, 40, 20, 10);
         const callback = vi.fn();
-        let rafCallback: FrameRequestCallback | null = null;
         const requestAnimationFrameSpy = vi.spyOn(window, 'requestAnimationFrame')
-            .mockImplementation((cb: FrameRequestCallback): number => {
-                rafCallback = cb;
-
-                return 1;
-            });
+            .mockImplementation((): number => 1);
         const cancelAnimationFrameSpy = vi.spyOn(window, 'cancelAnimationFrame')
             .mockImplementation(() => undefined);
         const cleanup = autoUpdate(reference, callback);
@@ -586,9 +623,13 @@ describe('autoUpdate', () => {
         expect(requestAnimationFrameSpy).toHaveBeenCalledTimes(1);
         expect(callback).toHaveBeenCalledTimes(0);
 
-        if (rafCallback) {
-            rafCallback(0);
+        const rafCallback = requestAnimationFrameSpy.mock.calls[0]?.[0];
+
+        if (typeof rafCallback !== 'function') {
+            throw new Error('requestAnimationFrame callback was not scheduled');
         }
+
+        rafCallback(0);
 
         expect(callback).toHaveBeenCalledTimes(1);
 

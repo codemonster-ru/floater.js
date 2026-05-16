@@ -19,6 +19,7 @@ type SanitizeCacheEntry = {
         flipPlacementsSnapshot: unknown[] | null;
         offsetValue: unknown;
         shiftParent: unknown;
+        shiftPadding: unknown;
         arrowElement: unknown;
     }>;
     sanitized: GuardMiddleware[];
@@ -90,6 +91,7 @@ export const sanitizeMiddlewareStack = <T extends GuardMiddleware>(middleware: T
                 ) ||
                 snapshot.offsetValue !== current.params?.value ||
                 snapshot.shiftParent !== current.params?.parent ||
+                snapshot.shiftPadding !== current.params?.padding ||
                 snapshot.arrowElement !== current.params?.arrow
             ) {
                 sameShape = false;
@@ -136,9 +138,16 @@ export const sanitizeMiddlewareStack = <T extends GuardMiddleware>(middleware: T
 
         if (item.name === 'shift') {
             const parent = item.params?.parent;
+            const padding = item.params?.padding;
 
             if (parent !== undefined && !isHTMLElement(parent)) {
                 warnMiddlewareOnce('[floater.js] shift middleware expects params.parent to be an HTMLElement. Middleware was ignored.');
+
+                return;
+            }
+
+            if (padding !== undefined && (typeof padding !== 'number' || !Number.isFinite(padding) || padding < 0)) {
+                warnMiddlewareOnce('[floater.js] shift middleware expects params.padding to be a finite non-negative number. Middleware was ignored.');
 
                 return;
             }
@@ -166,6 +175,7 @@ export const sanitizeMiddlewareStack = <T extends GuardMiddleware>(middleware: T
             flipPlacementsSnapshot: Array.isArray(item.params?.placements) ? [...item.params.placements] : null,
             offsetValue: item.params?.value,
             shiftParent: item.params?.parent,
+            shiftPadding: item.params?.padding,
             arrowElement: item.params?.arrow,
         })),
         sanitized: safe as GuardMiddleware[],

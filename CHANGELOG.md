@@ -1,6 +1,22 @@
 # Changelog
 
+<!-- markdownlint-disable MD024 -->
+
 All notable changes to this project will be documented in this file.
+
+## [1.0.11] - 2026-05-16
+
+### Added
+
+- `shift({ padding })` now accepts explicit viewport, scroll parent, or custom parent bounds padding.
+- Tests covering explicit `shift` padding, preserved offset-derived padding, and invalid padding sanitization.
+
+### Fixed
+
+- `shift` middleware sanitization now rejects non-finite and negative `params.padding` values with a deterministic warning.
+- Documentation examples using `shift({ padding })` now match the public API.
+- Arrow docs now clarify that `middlewareData.arrow.x/y` use the same coordinate space as floating `left/top`.
+- Strategy docs now describe the auto-detected default: `fixed` for CSS `position: fixed`, otherwise `absolute`.
 
 ## [1.0.9] - 2026-04-25
 
@@ -121,9 +137,9 @@ All notable changes to this project will be documented in this file.
 - `autoUpdate(reference, callback)` now returns a cleanup function that removes listeners.
 - `middlewareData.arrow` now keeps arrow coordinates (`x/y`) and exposes `baseX/baseY`.
 - Clamping and visibility logic was hardened for:
-    - scroll containers
-    - viewport checks when no scroll parent exists
-    - `shift + offset` interactions and padding consistency at edges
+  - scroll containers
+  - viewport checks when no scroll parent exists
+  - `shift + offset` interactions and padding consistency at edges
 - Virtual element handling in the demo was improved to avoid scroll artifacts.
 
 ### Notes

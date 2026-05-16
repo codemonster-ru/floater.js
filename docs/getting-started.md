@@ -113,8 +113,9 @@ update();
 
 ## Strategy: Absolute vs Fixed
 
-- `absolute` (default): best for floating elements within positioned layout containers.
+- `absolute`: best for floating elements within positioned layout containers.
 - `fixed`: best for floating elements rendered in `document.body` or other viewport-level layers.
+- Default is auto-detected: `fixed` when the floating element has CSS `position: fixed`, otherwise `absolute`.
 
 ```ts
 floating.style.position = 'fixed';
