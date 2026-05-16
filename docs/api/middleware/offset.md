@@ -28,41 +28,79 @@ Returns an offset middleware object for `computePosition(..., { middleware })`.
 Interactive demo:
 
 ````playground-src
-framework: vanilla
+mode: component
+framework: vue
 height: 340
-entry: /main.js
+entry: /App.vue
 
-```html file=/index.html
-<!doctype html>
-<html><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /><link rel="stylesheet" href="/styles.css" /></head><body><div class="stage"><button id="reference">Reference</button><div id="floating">offset: 20px</div></div><script type="module" src="/main.js"></script></body></html>
-```
+```vue file=/App.vue
+<template>
+  <section
+    class="stage"
+    :style="{
+      height: '100%',
+      minHeight: '230px',
+      display: 'grid',
+      placeItems: 'center',
+      position: 'relative'
+    }"
+  >
+    <div ref="reference" class="trigger">
+      <VfButton type="button" @click="update">
+        Reference
+      </VfButton>
+    </div>
 
-```css file=/styles.css
-body{margin:0;font-family:ui-sans-serif,system-ui,sans-serif}.stage{min-height:280px;display:grid;place-items:center;position:relative;background:#f7fafc}#reference{padding:10px 14px;border:0;border-radius:10px;background:#2d7a4f;color:#fff}#floating{position:absolute;left:0;top:0;background:#16442b;color:#fff;padding:8px 10px;border-radius:8px}
-```
+    <VfCard
+      ref="floating"
+      compact
+      class="float"
+      :style="{
+        position: 'absolute',
+        left: '0',
+        top: '0',
+        padding: '8px 10px',
+        borderRadius: '10px',
+        background: 'var(--vf-color-surface-muted)'
+      }"
+    >
+      offset: 20px
+    </VfCard>
+  </section>
+</template>
 
-```js file=/main.js
-import { computePosition, offset } from '@codemonster-ru/floater.js';
+<script setup>
+import { nextTick, onMounted, ref } from 'vue'
+import { computePosition, offset } from '@codemonster-ru/floater.js'
+import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
 
-const reference = document.querySelector('#reference');
-const floating = document.querySelector('#floating');
+const getEl = (value) => value?.$el ?? value
+const reference = ref(null)
+const floating = ref(null)
 
-computePosition(reference, floating, {
-  placement: 'bottom',
-  middleware: [offset(20)],
-}).then(({ x, y }) => {
-  floating.style.left = `${x}px`;
-  floating.style.top = `${y}px`;
-});
+const update = async () => {
+  const referenceEl = getEl(reference.value)
+  const floatingEl = getEl(floating.value)
+  if (!referenceEl || !floatingEl) {
+    return
+  }
+
+  const { x, y } = await computePosition(referenceEl, floatingEl, {
+    placement: 'bottom',
+    middleware: [offset(20)]
+  })
+
+  floatingEl.style.left = `${x}px`
+  floatingEl.style.top = `${y}px`
+}
+
+onMounted(() => {
+  void nextTick(update)
+})
+</script>
 ```
 
 ````
-
-```ts
-computePosition(reference, floating, {
-  middleware: [offset(8), flip(), shift()],
-});
-```
 
 ## Common Pitfalls
 
