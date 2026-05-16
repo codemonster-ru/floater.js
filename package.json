@@ -1,6 +1,6 @@
 {
     "name": "@codemonster-ru/floater.js",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "description": "Tiny TypeScript positioning library for tooltips, popovers, dropdowns, and context menus.",
     "license": "MIT",
     "author": "Kirill Kolesnikov",

@@ -18,7 +18,7 @@ computePosition(
 | --- | --- | --- | --- |
 | `placement` | `PlacementType` | `'bottom'` | Initial preferred placement. |
 | `middleware` | `MiddlewareType[]` | `[]` | Middleware chain executed left to right. |
-| `strategy` | `'absolute' \| 'fixed'` | `'absolute'` | Coordinate system for returned `x` and `y`. |
+| `strategy` | `'absolute' \| 'fixed'` | auto-detect | Coordinate system for returned `x` and `y`. Defaults to `fixed` when the floating element has CSS `position: fixed`; otherwise `absolute`. |
 
 ## Return Value
 

@@ -13,7 +13,7 @@ shift(params?: { parent?: HTMLElement; padding?: number })
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `parent` | `HTMLElement` | Optional explicit boundary element. |
-| `padding` | `number` | Optional viewport/boundary padding in pixels. |
+| `padding` | `number` | Optional viewport/boundary padding in pixels. Must be finite and non-negative. |
 
 ## Return Value
 
@@ -22,6 +22,8 @@ Returns a shift middleware object for `computePosition(..., { middleware })`.
 ## Behavior
 
 - Without `parent`, bounds come from viewport and scroll containers.
+- When `padding` is set, bounds are inset by that value.
+- When `padding` is omitted, `shift` keeps the previous behavior and uses `Math.abs(offset)` as padding if an `offset` middleware is present.
 - Clamps coordinates to keep the floating element visible.
 - Works best after `offset` and `flip`.
 

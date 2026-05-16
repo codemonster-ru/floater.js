@@ -442,6 +442,7 @@ export const offset = (value: number): OffsetMiddlewareType => markInternalMiddl
 
 export const shift = (params?: {
     parent?: HTMLElement;
+    padding?: number;
 }): ShiftMiddlewareType => markInternalMiddleware({
     name: 'shift',
     params: params,
@@ -472,7 +473,7 @@ export const shift = (params?: {
         const adjustedY = y - offsetY;
         let workingX = adjustedX;
         let workingY = adjustedY;
-        const padding = offsetMiddleware ? Math.abs(offsetValue) : 0;
+        const padding = params?.padding ?? (offsetMiddleware ? Math.abs(offsetValue) : 0);
         const marginX = padding;
         const marginY = padding;
         const fixed = isFixedStrategy(options, floating);
