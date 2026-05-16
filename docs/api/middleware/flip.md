@@ -29,49 +29,120 @@ Returns a flip middleware object for `computePosition(..., { middleware })`.
 Interactive demo:
 
 ````playground-src
-framework: vanilla
+mode: component
+framework: vue
 height: 340
-entry: /main.js
+entry: /App.vue
 
-```html file=/index.html
-<!doctype html>
-<html><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /><link rel="stylesheet" href="/styles.css" /></head><body><div class="stage"><button id="reference">Move mouse near edge</button><div id="floating">flip fallback</div></div><script type="module" src="/main.js"></script></body></html>
-```
+```vue file=/App.vue
+<template>
+  <section
+    ref="stage"
+    class="stage"
+    :style="{
+      height: '100%',
+      minHeight: '230px',
+      overflow: 'auto',
+      position: 'relative'
+    }"
+  >
+    <div :style="contentStyle">
+      <VfButton ref="reference" type="button" :style="referenceStyle">
+        Scroll preview
+      </VfButton>
 
-```css file=/styles.css
-body{margin:0;font-family:ui-sans-serif,system-ui,sans-serif}.stage{min-height:280px;display:grid;place-items:center;position:relative;background:#fff9f2}#reference{padding:10px 14px;border:0;border-radius:10px;background:#c45b12;color:#fff}#floating{position:absolute;left:0;top:0;background:#7a3208;color:#fff;padding:8px 10px;border-radius:8px;white-space:nowrap}
-```
+      <VfCard
+        ref="floating"
+        compact
+        class="float"
+        :style="floatingStyle"
+      >
+        requested: bottom
+        <br />
+        resolved: {{ resolvedPlacement }}
+      </VfCard>
+    </div>
+  </section>
+</template>
 
-```js file=/main.js
-import { computePosition, flip, offset, shift } from '@codemonster-ru/floater.js';
+<script setup>
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computePosition, flip, offset, shift } from '@codemonster-ru/floater.js'
+import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
 
-const reference = document.querySelector('#reference');
-const floating = document.querySelector('#floating');
+const getEl = (value) => value?.$el ?? value
+const stage = ref(null)
+const reference = ref(null)
+const floating = ref(null)
+const resolvedPlacement = ref('bottom')
+const coordinates = ref({ x: 0, y: 0 })
+const referenceTop = 420
+const contentStyle = {
+  height: '720px',
+  position: 'relative'
+}
+const referenceStyle = {
+  position: 'absolute',
+  left: '50%',
+  top: `${referenceTop}px`,
+  transform: 'translateX(-50%)'
+}
+const floatingStyle = computed(() => ({
+  position: 'absolute',
+  left: `${coordinates.value.x}px`,
+  top: `${coordinates.value.y}px`,
+  padding: '8px 10px',
+  minWidth: '160px',
+  whiteSpace: 'nowrap',
+  background: 'var(--vf-color-surface-muted)'
+}))
 
 const update = async () => {
-  const { x, y, placement } = await computePosition(reference, floating, {
+  await nextTick()
+
+  const referenceEl = getEl(reference.value)
+  const floatingEl = getEl(floating.value)
+  if (!referenceEl || !floatingEl) {
+    return
+  }
+
+  const { x, y, placement } = await computePosition(referenceEl, floatingEl, {
     placement: 'bottom',
-    middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift({ padding: 8 })],
-  });
+    middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift({ padding: 8 })]
+  })
 
-  floating.style.left = `${x}px`;
-  floating.style.top = `${y}px`;
-  floating.textContent = `resolved: ${placement}`;
-};
+  coordinates.value = { x, y }
+  resolvedPlacement.value = placement
+}
 
-window.addEventListener('resize', update);
-window.addEventListener('scroll', update, true);
-update();
+const onViewportChange = () => {
+  void update()
+}
+
+onMounted(async () => {
+  await nextTick()
+
+  const stageEl = stage.value
+  const referenceEl = getEl(reference.value)
+  if (stageEl && referenceEl) {
+    stageEl.scrollTop = referenceEl.offsetTop - (stageEl.clientHeight - referenceEl.offsetHeight) / 2
+    stageEl.addEventListener('scroll', onViewportChange)
+  }
+
+  window.addEventListener('resize', onViewportChange)
+  window.addEventListener('scroll', onViewportChange, true)
+  await update()
+})
+
+onBeforeUnmount(() => {
+  stage.value?.removeEventListener('scroll', onViewportChange)
+  window.removeEventListener('resize', onViewportChange)
+  window.removeEventListener('scroll', onViewportChange, true)
+})
+</script>
 ```
 
 ````
-
-```ts
-computePosition(reference, floating, {
-  placement: 'bottom',
-  middleware: [offset(8), flip({ placements: ['bottom', 'top'] }), shift()],
-});
-```
 
 ## Common Pitfalls
 

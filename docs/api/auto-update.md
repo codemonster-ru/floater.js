@@ -60,11 +60,13 @@ const update = async () => {
   floating.style.top = `${y}px`;
 };
 
+await update();
 const cleanup = autoUpdate(reference, update, floating);
 ```
 
 ## Common Pitfalls
 
 - Forgetting to call `cleanup` on hide/unmount.
+- Treating `autoUpdate(...)` as the initial positioning call. Run `update()` once before subscribing.
 - Using animation-frame mode when event mode is already sufficient.
 - Running heavy non-positioning logic inside `callback`.

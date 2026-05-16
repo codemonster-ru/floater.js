@@ -18,7 +18,7 @@ computePosition(
 | --- | --- | --- | --- |
 | `placement` | `PlacementType` | `'bottom'` | Initial preferred placement. |
 | `middleware` | `MiddlewareType[]` | `[]` | Middleware chain executed left to right. |
-| `strategy` | `'absolute' \| 'fixed'` | auto-detect | Coordinate system for returned `x` and `y`. Defaults to `fixed` when the floating element has CSS `position: fixed`; otherwise `absolute`. |
+| `strategy` | `'absolute' \| 'fixed'` | auto | Coordinate system for returned `x` and `y`. Defaults to `'fixed'` when the floating element has CSS `position: fixed`, otherwise `'absolute'`. |
 
 ## Return Value
 
@@ -43,78 +43,110 @@ computePosition(
 Interactive demo:
 
 ````playground-src
-framework: vanilla
+mode: component
+framework: vue
 height: 380
-entry: /main.js
+entry: /App.vue
 
-```html file=/index.html
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>computePosition demo</title>
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body>
-    <div class="stage">
-      <button id="reference" class="reference">Reference</button>
-      <div id="floating" class="floating">Floating</div>
-      <pre id="log" class="log"></pre>
-    </div>
-    <script type="module" src="/main.js"></script>
-  </body>
-</html>
-```
+```vue file=/App.vue
+<template>
+  <section
+    class="stage"
+    :style="{
+      height: '100%',
+      minHeight: '250px',
+      padding: '24px',
+      boxSizing: 'border-box',
+      display: 'grid',
+      placeItems: 'center',
+      position: 'relative'
+    }"
+  >
+    <VfButton ref="reference" class="reference" type="button" @click="nextStep">
+      {{ buttonLabel }}
+    </VfButton>
 
-```css file=/styles.css
-* { box-sizing: border-box; }
-body { margin: 0; font-family: ui-sans-serif, system-ui, sans-serif; }
-.stage { min-height: 320px; background: #f6f9ff; padding: 24px; position: relative; }
-.reference { border: 0; border-radius: 10px; background: #1f5fd0; color: #fff; padding: 10px 14px; }
-.floating { position: absolute; left: 0; top: 0; background: #17345e; color: #fff; border-radius: 8px; padding: 8px 10px; }
-.log { margin-top: 100px; background: #eef3ff; border-radius: 8px; padding: 10px; font-size: 12px; }
-```
+    <VfCard
+      ref="floating"
+      compact
+      class="floating"
+      :style="floatingStyle"
+    >
+      <div :style="{ display: 'grid', gap: '4px' }">
+        <span>requested: {{ requestedPlacement }}</span>
+        <span>resolved: {{ resolvedPlacement }}</span>
+        <span>x: {{ roundedX }}, y: {{ roundedY }}</span>
+      </div>
+    </VfCard>
+  </section>
+</template>
 
-```js file=/main.js
-import { computePosition, flip, offset, shift } from '@codemonster-ru/floater.js';
+<script setup>
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computePosition, offset } from '@codemonster-ru/floater.js'
+import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
 
-const reference = document.querySelector('#reference');
-const floating = document.querySelector('#floating');
-const log = document.querySelector('#log');
+const getEl = (value) => value?.$el ?? value
+const reference = ref(null)
+const floating = ref(null)
+const placements = ['top', 'right', 'bottom', 'left']
+let placementIndex = 0
+const requestedPlacement = ref(placements[placementIndex])
+const resolvedPlacement = ref(placements[placementIndex])
+const coordinates = ref({ x: 0, y: 0 })
+const roundedX = computed(() => Math.round(coordinates.value.x * 10) / 10)
+const roundedY = computed(() => Math.round(coordinates.value.y * 10) / 10)
+const buttonLabel = computed(() => `Placement: ${requestedPlacement.value}`)
+const floatingStyle = computed(() => ({
+  position: 'absolute',
+  left: `${coordinates.value.x}px`,
+  top: `${coordinates.value.y}px`,
+  minWidth: '190px',
+  background: 'var(--vf-color-surface-muted)'
+}))
 
 const update = async () => {
-  const result = await computePosition(reference, floating, {
-    placement: 'right-start',
-    middleware: [offset(8), flip(), shift({ padding: 8 })],
-  });
+  await nextTick()
 
-  floating.style.left = `${result.x}px`;
-  floating.style.top = `${result.y}px`;
+  const referenceEl = getEl(reference.value)
+  const floatingEl = getEl(floating.value)
+  if (!referenceEl || !floatingEl) {
+    return
+  }
 
-  log.textContent = JSON.stringify(
-    { x: result.x, y: result.y, placement: result.placement },
-    null,
-    2,
-  );
-};
+  const result = await computePosition(referenceEl, floatingEl, {
+    placement: requestedPlacement.value,
+    middleware: [offset(8)]
+  })
 
-window.addEventListener('resize', update);
-window.addEventListener('scroll', update, true);
-update();
+  resolvedPlacement.value = result.placement
+  coordinates.value = { x: result.x, y: result.y }
+}
+
+const nextStep = async () => {
+  placementIndex = (placementIndex + 1) % placements.length
+  requestedPlacement.value = placements[placementIndex]
+  await update()
+}
+
+const onResize = () => {
+  void update()
+}
+
+onMounted(() => {
+  window.addEventListener('resize', onResize)
+  window.addEventListener('scroll', onResize, true)
+  void nextTick(update)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
+  window.removeEventListener('scroll', onResize, true)
+})
+</script>
 ```
 
 ````
-
-```ts
-computePosition(reference, floating, {
-  placement: 'right-start',
-  middleware: [offset(8), flip(), shift()],
-}).then(({ x, y }) => {
-  floating.style.left = `${x}px`;
-  floating.style.top = `${y}px`;
-});
-```
 
 ## Common Pitfalls
 

@@ -12,7 +12,7 @@ arrow(arrowElement: HTMLElement)
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `arrowElement` | `HTMLElement` | Arrow node to position. It does not have to be a child of the floating element. |
+| `arrowElement` | `HTMLElement` | Arrow node positioned in the same coordinate context as the floating element. |
 
 ## Return Value
 
@@ -22,13 +22,12 @@ Returns an arrow middleware object for `computePosition(..., { middleware })`.
 
 - Computes arrow coordinates from the final floating geometry.
 - Exposes coordinates as `middlewareData.arrow`.
-- `middlewareData.arrow.x/y` are in the same coordinate space where the returned floating `left/top` are applied.
 - Should run after `offset`, `flip`, and `shift`.
 
 ## Output
 
-- `middlewareData.arrow.x`: Arrow `left` coordinate in floating coordinate space.
-- `middlewareData.arrow.y`: Arrow `top` coordinate in floating coordinate space.
+- `middlewareData.arrow.x`: Arrow `left` coordinate, not the floating element `x`.
+- `middlewareData.arrow.y`: Arrow `top` coordinate, not the floating element `y`.
 - `middlewareData.arrow.baseX`: Base floating `x` used for arrow calculation.
 - `middlewareData.arrow.baseY`: Base floating `y` used for arrow calculation.
 
@@ -37,109 +36,123 @@ Returns an arrow middleware object for `computePosition(..., { middleware })`.
 Interactive demo:
 
 ````playground-src
-framework: vanilla
+mode: component
+framework: vue
 height: 360
-entry: /main.js
+entry: /App.vue
 
-```html file=/index.html
-<!doctype html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body>
-    <div class="stage">
-      <button id="reference" class="ref">Arrow middleware</button>
-      <div id="floating" class="float">
-        tooltip
-        <div id="arrow" class="arrow"></div>
-      </div>
+```vue file=/App.vue
+<template>
+  <section
+    class="stage"
+    :style="{
+      height: '100%',
+      minHeight: '240px',
+      display: 'grid',
+      placeItems: 'center',
+      position: 'relative'
+    }"
+  >
+    <div ref="reference">
+      <VfButton class="ref" type="button" @click="onRun">
+        Arrow middleware
+      </VfButton>
     </div>
-    <script type="module" src="/main.js"></script>
-  </body>
-</html>
-```
 
-```css file=/styles.css
-body {
-  margin: 0;
-  font-family: ui-sans-serif, system-ui, sans-serif;
+    <VfCard
+      ref="floating"
+      compact
+      class="float"
+      :style="{
+        position: 'absolute',
+        left: '0',
+        top: '0',
+        padding: '8px 10px',
+        background: 'var(--vf-color-surface-muted)',
+        zIndex: '1'
+      }"
+    >
+      tooltip
+    </VfCard>
+
+    <span ref="arrowEl" :style="arrowStyle">
+      <span ref="arrowShape" :style="arrowShapeStyle" />
+    </span>
+  </section>
+</template>
+
+<script setup>
+import { nextTick, onMounted, ref } from 'vue'
+import { arrow, computePosition, flip, offset, shift } from '@codemonster-ru/floater.js'
+import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
+
+const getEl = (value) => value?.$el ?? value
+const reference = ref(null)
+const floating = ref(null)
+const arrowEl = ref(null)
+const arrowShape = ref(null)
+const arrowStyle = {
+  position: 'absolute',
+  left: '0',
+  top: '0',
+  width: '14px',
+  height: '14px',
+  zIndex: '2'
+}
+const arrowShapeStyle = {
+  position: 'absolute',
+  inset: '2px',
+  background: 'var(--vf-color-surface-muted)',
+  transform: 'rotate(45deg)'
 }
 
-.stage {
-  min-height: 300px;
-  display: grid;
-  place-items: center;
-  position: relative;
-  background: #f2f8fb;
-}
-
-.ref {
-  padding: 10px 14px;
-  border: 0;
-  border-radius: 10px;
-  background: #0f7a88;
-  color: #fff;
-}
-
-.float {
-  position: absolute;
-  left: 0;
-  top: 0;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: #0b4d56;
-  color: #fff;
-}
-
-.arrow {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #0b4d56;
-  transform: rotate(45deg);
-}
-```
-
-```js file=/main.js
-import { arrow, computePosition, flip, offset, shift } from '@codemonster-ru/floater.js';
-
-const reference = document.querySelector('#reference');
-const floating = document.querySelector('#floating');
-const arrowEl = document.querySelector('#arrow');
-
-computePosition(reference, floating, {
-  placement: 'top',
-  middleware: [offset(10), flip(), shift({ padding: 8 }), arrow(arrowEl)],
-}).then(({ x, y, placement, middlewareData }) => {
-  floating.style.left = `${x}px`;
-  floating.style.top = `${y}px`;
-
-  const data = middlewareData.arrow;
-  const side = placement.split('-')[0];
-  const staticSide = { top: 'bottom', right: 'left', bottom: 'top', left: 'right' }[side];
-
-  arrowEl.style.left = data?.x != null ? `${data.x}px` : '';
-  arrowEl.style.top = data?.y != null ? `${data.y}px` : '';
-  arrowEl.style.right = '';
-  arrowEl.style.bottom = '';
-  arrowEl.style[staticSide] = '-5px';
-});
-```
-````
-
-```ts
-computePosition(reference, floating, {
-  middleware: [offset(8), flip(), shift(), arrow(arrowEl)],
-}).then(({ middlewareData }) => {
-  if (middlewareData.arrow) {
-    arrowEl.style.left = `${middlewareData.arrow.x}px`;
-    arrowEl.style.top = `${middlewareData.arrow.y}px`;
+const update = async () => {
+  const referenceEl = getEl(reference.value)
+  const floatingEl = getEl(floating.value)
+  if (!referenceEl || !floatingEl || !arrowEl.value || !arrowShape.value) {
+    return
   }
-});
+
+  const { x, y, placement, middlewareData } = await computePosition(referenceEl, floatingEl, {
+    placement: 'top',
+    middleware: [offset(10), flip(), shift({ padding: 8 }), arrow(arrowEl.value)]
+  })
+
+  floatingEl.style.left = `${x}px`
+  floatingEl.style.top = `${y}px`
+
+  const data = middlewareData.arrow
+  if (data) {
+    const side = placement.split('-')[0]
+    const visibleBorders = {
+      top: ['borderRight', 'borderBottom'],
+      right: ['borderBottom', 'borderLeft'],
+      bottom: ['borderLeft', 'borderTop'],
+      left: ['borderTop', 'borderRight']
+    }
+
+    arrowEl.value.style.left = `${data.x}px`
+    arrowEl.value.style.top = `${data.y}px`
+
+    arrowShape.value.style.border = '0'
+    visibleBorders[side].forEach((borderSide) => {
+      arrowShape.value.style[borderSide] = '1px solid var(--vf-color-border)'
+    })
+  }
+}
+
+const onRun = async () => {
+  await nextTick()
+  await update()
+}
+
+onMounted(() => {
+  void onRun()
+})
+</script>
 ```
+
+````
 
 ## Common Pitfalls
 

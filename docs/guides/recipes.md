@@ -24,65 +24,147 @@ computePosition(reference, floating, {
 ### Tooltip Playground
 
 ````playground-src
-framework: vanilla
+mode: component
+framework: vue
 height: 380
-entry: /main.js
+entry: /App.vue
 
-```html file=/index.html
-<!doctype html>
-<html><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /><link rel="stylesheet" href="/styles.css" /></head><body><div class="tooltip-demo-root"><button id="reference" type="button" class="tooltip-demo-reference">Hover me</button><div id="floating" role="tooltip" hidden class="tooltip-demo-floating">Floater.js computes coordinates and keeps this tooltip aligned.<div id="arrow" class="tooltip-demo-arrow"></div></div></div><script type="module" src="/main.js"></script></body></html>
-```
+```vue file=/App.vue
+<template>
+  <section :style="tooltipStageStyle">
+    <div ref="reference">
+      <VfButton
+        type="button"
+        :style="referenceStyle"
+        @mouseenter="show"
+        @focus="show"
+        @mouseleave="hide"
+        @blur="hide"
+      >
+        Hover me
+      </VfButton>
+    </div>
 
-```css file=/styles.css
-.tooltip-demo-root{width:min(680px,92vw);min-height:320px;border:1px solid #c9ddf3;border-radius:16px;background:#fff;display:grid;place-items:center;position:relative;box-shadow:0 8px 30px rgba(53,106,157,.12);margin:12px 0}.tooltip-demo-reference{border:0;background:#1b6ed6;color:#fff;border-radius:12px;padding:12px 18px;font-size:16px;cursor:pointer}.tooltip-demo-floating{position:absolute;top:0;left:0;color:#fff;background:#163e72;border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.3;max-width:220px}.tooltip-demo-arrow{position:absolute;width:12px;height:12px;background:#163e72;transform:rotate(45deg)}
-```
+    <VfCard
+      v-show="visible"
+      ref="floating"
+      compact
+      role="tooltip"
+      :style="floatingStyle"
+    >
+      Floater.js computes coordinates and keeps this tooltip aligned.
+    </VfCard>
 
-```js file=/main.js
-import { autoUpdate, arrow, computePosition, flip, offset, shift } from '@codemonster-ru/floater.js';
+    <span v-show="visible" ref="arrowEl" :style="arrowStyle">
+      <span ref="arrowShape" :style="arrowShapeStyle" />
+    </span>
+  </section>
+</template>
 
-const reference = document.querySelector('#reference');
-const floating = document.querySelector('#floating');
-const arrowEl = document.querySelector('#arrow');
+<script setup>
+import { nextTick, onBeforeUnmount, ref } from 'vue'
+import { autoUpdate, arrow, computePosition, flip, offset, shift } from '@codemonster-ru/floater.js'
+import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
 
-let cleanup = null;
+const getEl = (value) => value?.$el ?? value
+const reference = ref(null)
+const floating = ref(null)
+const arrowEl = ref(null)
+const arrowShape = ref(null)
+const visible = ref(false)
+let cleanup = null
+
+const tooltipStageStyle = {
+  width: '100%',
+  height: '100%',
+  minHeight: '320px',
+  display: 'grid',
+  placeItems: 'center',
+  position: 'relative'
+}
+const referenceStyle = {
+  minWidth: '140px'
+}
+const floatingStyle = {
+  position: 'absolute',
+  top: '0',
+  left: '0',
+  maxWidth: '220px',
+  background: 'var(--vf-color-surface-muted)',
+  zIndex: '1'
+}
+const arrowStyle = {
+  position: 'absolute',
+  left: '0',
+  top: '0',
+  width: '14px',
+  height: '14px',
+  zIndex: '2'
+}
+const arrowShapeStyle = {
+  position: 'absolute',
+  inset: '2px',
+  background: 'var(--vf-color-surface-muted)',
+  transform: 'rotate(45deg)'
+}
 
 const update = async () => {
-  const { x, y, middlewareData, placement } = await computePosition(reference, floating, {
+  const referenceEl = getEl(reference.value)
+  const floatingEl = getEl(floating.value)
+  if (!referenceEl || !floatingEl || !arrowEl.value || !arrowShape.value) {
+    return
+  }
+
+  const { x, y, middlewareData, placement } = await computePosition(referenceEl, floatingEl, {
     placement: 'top',
-    middleware: [offset(10), flip(), shift({ padding: 8 }), arrow(arrowEl)],
-  });
+    middleware: [offset(10), flip(), shift({ padding: 8 }), arrow(arrowEl.value)]
+  })
 
-  floating.style.left = `${x}px`;
-  floating.style.top = `${y}px`;
+  floatingEl.style.left = `${x}px`
+  floatingEl.style.top = `${y}px`
 
-  const arrowData = middlewareData.arrow;
-  const side = placement.split('-')[0];
-  const staticSide = { top: 'bottom', right: 'left', bottom: 'top', left: 'right' }[side];
+  const arrowData = middlewareData.arrow
+  if (arrowData) {
+    const side = placement.split('-')[0]
+    const visibleBorders = {
+      top: ['borderRight', 'borderBottom'],
+      right: ['borderBottom', 'borderLeft'],
+      bottom: ['borderLeft', 'borderTop'],
+      left: ['borderTop', 'borderRight']
+    }
 
-  arrowEl.style.left = arrowData?.x != null ? `${arrowData.x}px` : '';
-  arrowEl.style.top = arrowData?.y != null ? `${arrowData.y}px` : '';
-  arrowEl.style.right = '';
-  arrowEl.style.bottom = '';
-  arrowEl.style[staticSide] = '-6px';
-};
+    arrowEl.value.style.left = `${arrowData.x}px`
+    arrowEl.value.style.top = `${arrowData.y}px`
+
+    arrowShape.value.style.border = '0'
+    visibleBorders[side].forEach((borderSide) => {
+      arrowShape.value.style[borderSide] = '1px solid var(--vf-color-border)'
+    })
+  }
+}
 
 const show = async () => {
-  floating.hidden = false;
-  await update();
-  cleanup?.();
-  cleanup = autoUpdate(reference, update, floating);
-};
+  visible.value = true
+  await nextTick()
+  await update()
+  cleanup?.()
+
+  const referenceEl = getEl(reference.value)
+  const floatingEl = getEl(floating.value)
+  cleanup = referenceEl && floatingEl ? autoUpdate(referenceEl, update, floatingEl) : null
+}
 
 const hide = () => {
-  floating.hidden = true;
-  cleanup?.();
-  cleanup = null;
-};
+  visible.value = false
+  cleanup?.()
+  cleanup = null
+}
 
-reference.addEventListener('mouseenter', show);
-reference.addEventListener('focus', show);
-reference.addEventListener('mouseleave', hide);
-reference.addEventListener('blur', hide);
+onBeforeUnmount(() => {
+  cleanup?.()
+  cleanup = null
+})
+</script>
 ```
 
 ````
@@ -131,67 +213,157 @@ computePosition(pointRef, menu, {
 ### Context Menu Playground
 
 ````playground-src
-framework: vanilla
+mode: component
+framework: vue
 height: 420
-entry: /main.js
+entry: /App.vue
 
-```html file=/index.html
-<!doctype html>
-<html><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /><link rel="stylesheet" href="/styles.css" /></head><body><div id="stage" class="menu-demo-stage"><p class="menu-demo-note">Right click anywhere in this card to open the menu.</p><div id="menu" role="menu" hidden class="menu-demo-menu"><button type="button" role="menuitem">Open</button><button type="button" role="menuitem">Rename</button><button type="button" role="menuitem">Duplicate</button><button type="button" role="menuitem">Delete</button></div></div><script type="module" src="/main.js"></script></body></html>
-```
+```vue file=/App.vue
+<template>
+  <section ref="stage" :style="stageStyle" @click="onStageClick" @contextmenu="onContext">
+    <p :style="noteStyle">Right click anywhere in this area to open the menu.</p>
 
-```css file=/styles.css
-.menu-demo-stage{width:min(740px,94vw);min-height:360px;border:1px solid #f1d8b6;border-radius:18px;background:#fff;box-shadow:0 10px 34px rgba(173,106,24,.16);padding:22px;position:relative;margin:12px 0}.menu-demo-note{margin:0;color:#7f5a24;font-size:15px}.menu-demo-menu{position:absolute;top:0;left:0;width:220px;background:#fff;border-radius:12px;border:1px solid #e8cfaa;box-shadow:0 12px 30px rgba(165,101,22,.2);padding:8px;display:grid;gap:4px}.menu-demo-menu button{border:0;width:100%;text-align:left;padding:8px 10px;border-radius:8px;background:transparent;cursor:pointer;color:#5a3a0f}
-```
+    <div
+      v-show="visible"
+      ref="menu"
+      role="menu"
+      :style="menuStyle"
+      @click.stop
+    >
+      <button
+        v-for="label in labels"
+        :key="label"
+        class="context-menu__item"
+        type="button"
+        role="menuitem"
+      >
+        {{ label }}
+      </button>
+    </div>
+  </section>
+</template>
 
-```js file=/main.js
-import { computePosition, flip, shift } from '@codemonster-ru/floater.js';
+<script setup>
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computePosition, flip, offset, shift } from '@codemonster-ru/floater.js'
 
-const stage = document.querySelector('#stage');
-const menu = document.querySelector('#menu');
-
-let cursorX = 0;
-let cursorY = 0;
+const getEl = (value) => value?.$el ?? value
+const stage = ref(null)
+const menu = ref(null)
+const visible = ref(false)
+const cursor = ref({ x: 0, y: 0 })
+const labels = ['Open', 'Rename', 'Duplicate', 'Delete']
+const stageStyle = {
+  width: '100%',
+  height: '100%',
+  minHeight: '360px',
+  padding: '22px',
+  boxSizing: 'border-box',
+  position: 'relative'
+}
+const noteStyle = {
+  margin: '0',
+  color: 'var(--vf-color-muted)'
+}
+const menuStyle = {
+  position: 'absolute',
+  top: '0',
+  left: '0',
+  width: '210px',
+  display: 'grid',
+  gridTemplateColumns: '1fr',
+  gap: '2px',
+  padding: '6px',
+  border: '1px solid var(--vf-color-border)',
+  borderRadius: '8px',
+  background: 'var(--vf-color-surface-muted)',
+  zIndex: '1'
+}
 
 const virtualReference = {
   offsetTop: 0,
   offsetLeft: 0,
   getBoundingClientRect: () => ({
-    x: cursorX,
-    y: cursorY,
-    top: cursorY,
-    left: cursorX,
-    right: cursorX,
-    bottom: cursorY,
+    x: cursor.value.x,
+    y: cursor.value.y,
+    top: cursor.value.y,
+    left: cursor.value.x,
+    right: cursor.value.x,
+    bottom: cursor.value.y,
     width: 0,
-    height: 0,
-  }),
-};
+    height: 0
+  })
+}
 
 const openMenu = async () => {
-  menu.hidden = false;
-
-  const { x, y } = await computePosition(virtualReference, menu, {
-    placement: 'right-start',
-    middleware: [flip(), shift({ padding: 10 })],
-  });
-
-  menu.style.left = `${x}px`;
-  menu.style.top = `${y}px`;
-};
-
-stage.addEventListener('contextmenu', async (event) => {
-  event.preventDefault();
-  cursorX = event.clientX;
-  cursorY = event.clientY;
-  await openMenu();
-});
-
-document.addEventListener('click', (event) => {
-  if (!stage.contains(event.target)) {
-    menu.hidden = true;
+  const menuEl = getEl(menu.value)
+  if (!menuEl) {
+    return
   }
-});
+
+  visible.value = true
+  await nextTick()
+
+  const { x, y } = await computePosition(virtualReference, menuEl, {
+    placement: 'right-start',
+    middleware: [offset(4), flip(), shift({ padding: 10 })]
+  })
+
+  menuEl.style.left = `${x}px`
+  menuEl.style.top = `${y}px`
+}
+
+const onContext = async (event) => {
+  event.preventDefault()
+  cursor.value = { x: event.clientX, y: event.clientY }
+  await openMenu()
+}
+
+const onStageClick = (event) => {
+  const menuEl = getEl(menu.value)
+  if (menuEl?.contains(event.target)) {
+    return
+  }
+
+  visible.value = false
+}
+
+const onDocClick = (event) => {
+  if (!getEl(stage.value)?.contains(event.target)) {
+    visible.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+})
+</script>
+
+<style scoped>
+.context-menu__item {
+  border: 0;
+  border-radius: 6px;
+  color: var(--vf-color-text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.context-menu__item {
+  background: transparent;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.context-menu__item:hover,
+.context-menu__item:focus-visible {
+  background: var(--vf-color-surface);
+  outline: none;
+}
+</style>
 ```
 
 ````

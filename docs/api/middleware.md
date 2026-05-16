@@ -37,7 +37,10 @@ Custom middleware names must not conflict with reserved built-in names.
 Floater.js sanitizes invalid middleware input:
 
 - Reserved names (`flip`, `offset`, `shift`, `arrow`) are blocked for custom middleware.
-- Invalid built-in parameters are ignored.
+- `offset` requires a finite numeric value.
+- `flip` requires `placements` to be valid `PlacementType[]` values.
+- `shift` requires `parent` to be an `HTMLElement` and `padding` to be a finite non-negative number.
+- `arrow` requires an `HTMLElement`.
 - Warnings are emitted through `console.warn`.
 
 ## Low-Level Utility
