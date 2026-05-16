@@ -116,6 +116,7 @@ export interface ShiftMiddlewareType {
     name: 'shift',
     params?: {
         parent?: HTMLElement;
+        padding?: number;
     },
 }
 
