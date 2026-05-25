@@ -4,11 +4,15 @@
 
 ## Signature
 
+The code snippet below illustrates this section.
+
 ```ts
 shift(params?: { parent?: HTMLElement; padding?: number })
 ```
 
 ## Parameters
+
+The table below summarizes this section.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -21,13 +25,15 @@ Returns a shift middleware object for `computePosition(..., { middleware })`.
 
 ## Behavior
 
+The following items are listed in this section:
+
 - Without `parent`, bounds come from viewport and scroll containers.
 - Clamps coordinates to keep the floating element visible.
 - Works best after `offset` and `flip`.
 
 ## Example
 
-Interactive demo:
+Interactive demo.
 
 ````playground-src
 mode: component
@@ -93,7 +99,7 @@ const floatingStyle = computed(() => ({
   left: `${coordinates.value.x}px`,
   top: `${coordinates.value.y}px`,
   width: '220px',
-  padding: '8px 10px',
+  padding: 'var(--vf-surface-gap-compact) var(--vf-surface-gap)',
   background: 'var(--vf-color-surface-muted)',
   zIndex: '1'
 }))
@@ -145,6 +151,8 @@ onBeforeUnmount(() => {
 ````
 
 ## Common Pitfalls
+
+The following items are listed in this section:
 
 - Using a `parent` boundary that is too small for expected placements.
 - Large offsets that force frequent clamping.

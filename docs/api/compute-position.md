@@ -4,6 +4,8 @@
 
 ## Signature
 
+The code snippet below illustrates this section.
+
 ```ts
 computePosition(
   reference: HTMLElement | VirtualElement,
@@ -14,6 +16,8 @@ computePosition(
 
 ## Options
 
+The table below summarizes this section.
+
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `placement` | `PlacementType` | `'bottom'` | Initial preferred placement. |
@@ -21,6 +25,8 @@ computePosition(
 | `strategy` | `'absolute' \| 'fixed'` | auto | Coordinate system for returned `x` and `y`. Defaults to `'fixed'` when the floating element has CSS `position: fixed`, otherwise `'absolute'`. |
 
 ## Return Value
+
+The code snippet below illustrates this section.
 
 ```ts
 {
@@ -33,6 +39,8 @@ computePosition(
 
 ## Behavior
 
+The following items are listed in this section:
+
 - Middleware runs in the exact order provided.
 - Middleware can adjust `x`, `y`, and `placement`.
 - Middleware output is available as `middlewareData[name]`.
@@ -40,7 +48,7 @@ computePosition(
 
 ## Example
 
-Interactive demo:
+Interactive demo.
 
 ````playground-src
 mode: component
@@ -55,7 +63,7 @@ entry: /App.vue
     :style="{
       height: '100%',
       minHeight: '250px',
-      padding: '24px',
+      padding: 'var(--vf-surface-padding)',
       boxSizing: 'border-box',
       display: 'grid',
       placeItems: 'center',
@@ -72,7 +80,7 @@ entry: /App.vue
       class="floating"
       :style="floatingStyle"
     >
-      <div :style="{ display: 'grid', gap: '4px' }">
+      <div :style="{ display: 'grid', gap: 'var(--vf-field-padding-xs)' }">
         <span>requested: {{ requestedPlacement }}</span>
         <span>resolved: {{ resolvedPlacement }}</span>
         <span>x: {{ roundedX }}, y: {{ roundedY }}</span>
@@ -149,6 +157,8 @@ onBeforeUnmount(() => {
 ````
 
 ## Common Pitfalls
+
+The following items are listed in this section:
 
 - Floating element must use `position: absolute` or `position: fixed`.
 - Apply returned `x/y` directly to `left/top`.
