@@ -6,6 +6,8 @@ All snippets assume `position: absolute` unless stated otherwise.
 
 ## Tooltip
 
+The code snippet below illustrates this section.
+
 ```ts
 computePosition(reference, floating, {
   placement: 'top',
@@ -22,6 +24,8 @@ computePosition(reference, floating, {
 ```
 
 ### Tooltip Playground
+
+The code snippet below illustrates this section.
 
 ````playground-src
 mode: component
@@ -97,13 +101,13 @@ const arrowStyle = {
   position: 'absolute',
   left: '0',
   top: '0',
-  width: '14px',
-  height: '14px',
+  width: 'var(--vf-surface-padding)',
+  height: 'var(--vf-surface-padding)',
   zIndex: '2'
 }
 const arrowShapeStyle = {
   position: 'absolute',
-  inset: '2px',
+  inset: 'var(--vf-field-padding-xxs)',
   background: 'var(--vf-color-surface-muted)',
   transform: 'rotate(45deg)'
 }
@@ -171,6 +175,8 @@ onBeforeUnmount(() => {
 
 ## Dropdown
 
+The code snippet below illustrates this section.
+
 ```ts
 computePosition(button, menu, {
   placement: 'bottom-start',
@@ -182,6 +188,8 @@ computePosition(button, menu, {
 ```
 
 ## Context Menu (VirtualElement)
+
+The code snippet below illustrates this section.
 
 ```ts
 const pointRef = {
@@ -212,6 +220,8 @@ computePosition(pointRef, menu, {
 
 ### Context Menu Playground
 
+The code snippet below illustrates this section.
+
 ````playground-src
 mode: component
 framework: vue
@@ -230,15 +240,16 @@ entry: /App.vue
       :style="menuStyle"
       @click.stop
     >
-      <button
+      <VfButton
         v-for="label in labels"
         :key="label"
         class="context-menu__item"
         type="button"
+        variant="ghost"
         role="menuitem"
       >
         {{ label }}
-      </button>
+      </VfButton>
     </div>
   </section>
 </template>
@@ -246,6 +257,7 @@ entry: /App.vue
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { computePosition, flip, offset, shift } from '@codemonster-ru/floater.js'
+import { VfButton } from '@codemonster-ru/vueforge-core'
 
 const getEl = (value) => value?.$el ?? value
 const stage = ref(null)
@@ -257,7 +269,7 @@ const stageStyle = {
   width: '100%',
   height: '100%',
   minHeight: '360px',
-  padding: '22px',
+  padding: 'var(--vf-surface-padding)',
   boxSizing: 'border-box',
   position: 'relative'
 }
@@ -272,11 +284,12 @@ const menuStyle = {
   width: '210px',
   display: 'grid',
   gridTemplateColumns: '1fr',
-  gap: '2px',
-  padding: '6px',
+  gap: 'var(--vf-field-padding-xs)',
+  padding: 'var(--vf-surface-gap-tight)',
   border: '1px solid var(--vf-color-border)',
-  borderRadius: '8px',
+  borderRadius: 'var(--vf-radius-control)',
   background: 'var(--vf-color-surface-muted)',
+  overflow: 'hidden',
   zIndex: '1'
 }
 
@@ -345,6 +358,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .context-menu__item {
+  width: 100%;
+  justify-content: flex-start;
   border: 0;
   border-radius: 6px;
   color: var(--vf-color-text);
@@ -370,6 +385,8 @@ onBeforeUnmount(() => {
 
 ## Fixed Portal Popover
 
+The code snippet below illustrates this section.
+
 ```ts
 floating.style.position = 'fixed';
 document.body.appendChild(floating);
@@ -385,6 +402,8 @@ computePosition(reference, floating, {
 ```
 
 ## Reactive Updates
+
+The code snippet below illustrates this section.
 
 ```ts
 const update = () => {

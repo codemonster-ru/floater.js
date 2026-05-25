@@ -6,6 +6,8 @@ Most applications should use `computePosition` with built-in middleware. Use hel
 
 ## Position Helpers
 
+The following items are listed in this section:
+
 - `getPosition(...)`
 - `getTopPosition(...)`
 - `getTopStartPosition(...)`
@@ -26,12 +28,16 @@ Most applications should use `computePosition` with built-in middleware. Use hel
 
 ## Offset Helpers
 
+The following items are listed in this section:
+
 - `getOffsetX(...)`
 - `getOffsetY(...)`
 
 For standard spacing behavior, prefer [offset middleware](./middleware/offset.md).
 
 ## Arrow Helpers
+
+The following items are listed in this section:
 
 - `getArrowPosition(...)`
 - `getTopArrowPosition(...)`
@@ -42,6 +48,8 @@ For standard spacing behavior, prefer [offset middleware](./middleware/offset.md
 - `getArrowDifferenceHeight(...)`
 
 ## Example
+
+The code snippet below illustrates this section.
 
 ```ts
 const base = getPosition(reference, floating, 'bottom-start', {
@@ -54,6 +62,8 @@ const arrowPosition = getArrowPosition(base.x, base.y, arrowEl, floating, refere
 ```
 
 ## Use Helpers When
+
+The following items are listed in this section:
 
 - You are writing custom geometry logic.
 - You need deep placement diagnostics.

@@ -4,11 +4,15 @@
 
 ## Signature
 
+The code snippet below illustrates this section.
+
 ```ts
 autoUpdate(reference, callback, floatingOrOptions?, options?) => () => void
 ```
 
 ## Parameters
+
+The table below summarizes this section.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -23,11 +27,15 @@ Returns a `cleanup` function. Call it when the floating element is hidden or unm
 
 ## Behavior
 
+Choose the update mode based on how dynamic your reference and floating elements are.
+
 ### Event Mode (Default)
 
 Subscribes to scroll/resize sources and `ResizeObserver` when available.
 
 ### Animation Frame Mode
+
+The code snippet below illustrates this section.
 
 ```ts
 autoUpdate(reference, update, floating, {
@@ -40,6 +48,8 @@ Use for transform-driven or continuously animated reference elements.
 
 ## Options
 
+The code snippet below illustrates this section.
+
 ```ts
 interface AutoUpdateOptions {
   animationFrame?: boolean;
@@ -48,6 +58,8 @@ interface AutoUpdateOptions {
 ```
 
 ## Example
+
+The code snippet below illustrates this section.
 
 ```ts
 const update = async () => {
@@ -65,6 +77,8 @@ const cleanup = autoUpdate(reference, update, floating);
 ```
 
 ## Common Pitfalls
+
+The following items are listed in this section:
 
 - Forgetting to call `cleanup` on hide/unmount.
 - Treating `autoUpdate(...)` as the initial positioning call. Run `update()` once before subscribing.

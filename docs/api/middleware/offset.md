@@ -4,11 +4,15 @@
 
 ## Signature
 
+The code snippet below illustrates this section.
+
 ```ts
 offset(value: number)
 ```
 
 ## Parameters
+
+The table below summarizes this section.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -20,12 +24,14 @@ Returns an offset middleware object for `computePosition(..., { middleware })`.
 
 ## Behavior
 
+The following items are listed in this section:
+
 - Applies distance before fallback and boundary checks.
 - Should run before `flip` and `shift` in most stacks.
 
 ## Example
 
-Interactive demo:
+Interactive demo.
 
 ````playground-src
 mode: component
@@ -59,8 +65,8 @@ entry: /App.vue
         position: 'absolute',
         left: '0',
         top: '0',
-        padding: '8px 10px',
-        borderRadius: '10px',
+        padding: 'var(--vf-surface-gap-compact) var(--vf-surface-gap)',
+        borderRadius: 'var(--vf-radius-control)',
         background: 'var(--vf-color-surface-muted)'
       }"
     >
@@ -103,6 +109,8 @@ onMounted(() => {
 ````
 
 ## Common Pitfalls
+
+The following items are listed in this section:
 
 - Passing non-finite values (`NaN`, `Infinity`).
 - Placing `offset` after `flip` when offset should be included in fit checks.
