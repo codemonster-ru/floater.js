@@ -2,7 +2,6 @@
 
 This section provides a quick overview before the detailed subsections below.
 
-
 ## Floating Element Renders In Wrong Place
 
 Check:
