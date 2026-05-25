@@ -4,9 +4,7 @@ Floater.js computes robust coordinates for floating elements relative to referen
 
 ## Installation
 
-```bash
-npm i @codemonster-ru/floater.js
-```
+See the dedicated [Installation](./installation.md) page.
 
 ## Quick Start
 
@@ -89,13 +87,13 @@ const arrowStyle = {
   position: 'absolute',
   left: '0',
   top: '0',
-  width: '14px',
-  height: '14px',
+  width: 'var(--vf-surface-padding)',
+  height: 'var(--vf-surface-padding)',
   zIndex: '2',
 };
 const arrowShapeStyle = {
   position: 'absolute',
-  inset: '2px',
+  inset: 'var(--vf-field-padding-xxs)',
   background: 'var(--vf-color-surface-muted)',
   transform: 'rotate(45deg)',
 };
@@ -154,12 +152,16 @@ onBeforeUnmount(() => {
 
 ## Positioning Lifecycle
 
+The following items are listed in this section:
+
 1. Call `computePosition(reference, floating, options)`.
 2. Apply the returned coordinates (`x`, `y`) to your floating element.
 3. Keep coordinates fresh with `autoUpdate(...)` while the floating element is visible.
 4. Always dispose with the `cleanup` callback.
 
 ## Strategy: Absolute vs Fixed
+
+The following items are listed in this section:
 
 - `absolute` (default): best for floating elements within positioned layout containers.
 - `fixed`: best for floating elements rendered in `document.body` or other viewport-level layers.
@@ -177,12 +179,16 @@ await computePosition(reference, floating, {
 
 ## SSR Boundary
 
+The following items are listed in this section:
+
 - Safe on server: importing the package.
 - Browser-only: DOM-dependent calls such as `computePosition(...)` and `autoUpdate(...)`.
 
 Run DOM logic only after mount (or inside client-only branches).
 
 ## Where To Next
+
+The following items are listed in this section:
 
 - [Core API](./api/core.md)
 - [Compute Position](./api/compute-position.md)

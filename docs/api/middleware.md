@@ -4,12 +4,16 @@ Middleware is executed inside `computePosition(..., { middleware })` from left t
 
 ## Built-In Middleware
 
+The following items are listed in this section:
+
 - [Offset](./middleware/offset.md)
 - [Flip](./middleware/flip.md)
 - [Shift](./middleware/shift.md)
 - [Arrow](./middleware/arrow.md)
 
 ## Recommended Order
+
+The code snippet below illustrates this section.
 
 ```ts
 [offset(8), flip(), shift(), arrow(arrowEl)];
@@ -18,6 +22,8 @@ Middleware is executed inside `computePosition(..., { middleware })` from left t
 This order preserves expected geometry: distance, fallback side, boundary clamping, then arrow alignment.
 
 ## Custom Middleware
+
+The code snippet below illustrates this section.
 
 ```ts
 const customMiddleware = {

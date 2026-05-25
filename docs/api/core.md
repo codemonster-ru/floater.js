@@ -4,6 +4,8 @@ The Floater.js public API is intentionally small and composable.
 
 ## Entry Points
 
+The following items are listed in this section:
+
 - [Compute Position](./compute-position.md)
 - [Auto Update](./auto-update.md)
 - [Middleware API](./middleware.md)
@@ -14,10 +16,18 @@ The Floater.js public API is intentionally small and composable.
 
 `placementTypes` exports all supported placements:
 
-- `top`, `top-start`, `top-end`
-- `right`, `right-start`, `right-end`
-- `bottom`, `bottom-start`, `bottom-end`
-- `left`, `left-start`, `left-end`
+- `top`
+- `top-start`
+- `top-end`
+- `right`
+- `right-start`
+- `right-end`
+- `bottom`
+- `bottom-start`
+- `bottom-end`
+- `left`
+- `left-start`
+- `left-end`
 
 ## Virtual Reference
 

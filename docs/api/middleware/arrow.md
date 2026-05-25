@@ -4,11 +4,15 @@
 
 ## Signature
 
+The code snippet below illustrates this section.
+
 ```ts
 arrow(arrowElement: HTMLElement)
 ```
 
 ## Parameters
+
+The table below summarizes this section.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -20,11 +24,15 @@ Returns an arrow middleware object for `computePosition(..., { middleware })`.
 
 ## Behavior
 
+The following items are listed in this section:
+
 - Computes arrow coordinates from the final floating geometry.
 - Exposes coordinates as `middlewareData.arrow`.
 - Should run after `offset`, `flip`, and `shift`.
 
 ## Output
+
+The following items are listed in this section:
 
 - `middlewareData.arrow.x`: Arrow `left` coordinate, not the floating element `x`.
 - `middlewareData.arrow.y`: Arrow `top` coordinate, not the floating element `y`.
@@ -33,7 +41,7 @@ Returns an arrow middleware object for `computePosition(..., { middleware })`.
 
 ## Example
 
-Interactive demo:
+Interactive demo.
 
 ````playground-src
 mode: component
@@ -67,7 +75,7 @@ entry: /App.vue
         position: 'absolute',
         left: '0',
         top: '0',
-        padding: '8px 10px',
+        padding: 'var(--vf-surface-gap-compact) var(--vf-surface-gap)',
         background: 'var(--vf-color-surface-muted)',
         zIndex: '1'
       }"
@@ -95,13 +103,13 @@ const arrowStyle = {
   position: 'absolute',
   left: '0',
   top: '0',
-  width: '14px',
-  height: '14px',
+  width: 'var(--vf-surface-padding)',
+  height: 'var(--vf-surface-padding)',
   zIndex: '2'
 }
 const arrowShapeStyle = {
   position: 'absolute',
-  inset: '2px',
+  inset: 'var(--vf-field-padding-xxs)',
   background: 'var(--vf-color-surface-muted)',
   transform: 'rotate(45deg)'
 }
@@ -155,6 +163,8 @@ onMounted(() => {
 ````
 
 ## Common Pitfalls
+
+The following items are listed in this section:
 
 - Running `arrow(...)` before geometry middleware (`offset`, `flip`, `shift`).
 - Reading `middlewareData.arrow` without a guard in dynamic middleware stacks.

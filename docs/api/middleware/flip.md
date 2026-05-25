@@ -4,11 +4,15 @@
 
 ## Signature
 
+The code snippet below illustrates this section.
+
 ```ts
 flip(params?: { placements?: PlacementType[] })
 ```
 
 ## Parameters
+
+The table below summarizes this section.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -20,13 +24,15 @@ Returns a flip middleware object for `computePosition(..., { middleware })`.
 
 ## Behavior
 
+The following items are listed in this section:
+
 - Without `placements`, the internal full fallback order is used.
 - With `placements`, fallback is restricted to that list.
 - Works best after `offset` and before `shift`.
 
 ## Example
 
-Interactive demo:
+Interactive demo.
 
 ````playground-src
 mode: component
@@ -91,7 +97,7 @@ const floatingStyle = computed(() => ({
   position: 'absolute',
   left: `${coordinates.value.x}px`,
   top: `${coordinates.value.y}px`,
-  padding: '8px 10px',
+  padding: 'var(--vf-surface-gap-compact) var(--vf-surface-gap)',
   minWidth: '160px',
   whiteSpace: 'nowrap',
   background: 'var(--vf-color-surface-muted)'
@@ -145,6 +151,8 @@ onBeforeUnmount(() => {
 ````
 
 ## Common Pitfalls
+
+The following items are listed in this section:
 
 - Overly restrictive `placements` arrays that remove valid fallbacks.
 - Running `flip` before `offset` when offset must be part of fit checks.
