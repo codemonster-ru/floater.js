@@ -32,7 +32,7 @@ if (reference && floating) {
 
 ## Interactive Vue Example
 
-The playground below uses Vue and VueForge components for the docs demo, while the positioning logic still comes from Floater.js.
+The playground below uses CodeMonster UI components for the demo and Floater.js for positioning.
 
 ````playground-src
 mode: component
@@ -60,7 +60,8 @@ entry: /App.vue
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@codemonster-ru/floater.js';
-import { VfButton, VfCard } from '@codemonster-ru/vueforge-core';
+import { VfButton } from '@codemonster-ru/ui-vue/historical/button';
+import { VfCard } from '@codemonster-ru/ui-vue/historical/card';
 
 const reference = ref(null);
 const floating = ref(null);
@@ -80,21 +81,21 @@ const floatingStyle = {
   position: 'absolute',
   left: '0',
   top: '0',
-  background: 'var(--vf-color-surface-muted)',
+  background: 'var(--cm-color-background-surface-subtle)',
   zIndex: '1',
 };
 const arrowStyle = {
   position: 'absolute',
   left: '0',
   top: '0',
-  width: 'var(--vf-surface-padding)',
-  height: 'var(--vf-surface-padding)',
+  width: 'var(--cm-space-4)',
+  height: 'var(--cm-space-4)',
   zIndex: '2',
 };
 const arrowShapeStyle = {
   position: 'absolute',
-  inset: 'var(--vf-field-padding-xxs)',
-  background: 'var(--vf-color-surface-muted)',
+  inset: 'var(--cm-space-1)',
+  background: 'var(--cm-color-background-surface-subtle)',
   transform: 'rotate(45deg)',
 };
 
@@ -128,7 +129,7 @@ const update = async () => {
 
     arrowShape.value.style.border = '0';
     visibleBorders[side].forEach((borderSide) => {
-      arrowShape.value.style[borderSide] = '1px solid var(--vf-color-border)';
+      arrowShape.value.style[borderSide] = '1px solid var(--cm-color-border-default)';
     });
   }
 };

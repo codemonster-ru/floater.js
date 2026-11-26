@@ -68,7 +68,8 @@ entry: /App.vue
 <script setup>
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 import { autoUpdate, arrow, computePosition, flip, offset, shift } from '@codemonster-ru/floater.js'
-import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
+import { VfButton } from '@codemonster-ru/ui-vue/historical/button'
+import { VfCard } from '@codemonster-ru/ui-vue/historical/card'
 
 const getEl = (value) => value?.$el ?? value
 const reference = ref(null)
@@ -94,21 +95,21 @@ const floatingStyle = {
   top: '0',
   left: '0',
   maxWidth: '220px',
-  background: 'var(--vf-color-surface-muted)',
+  background: 'var(--cm-color-background-surface-subtle)',
   zIndex: '1'
 }
 const arrowStyle = {
   position: 'absolute',
   left: '0',
   top: '0',
-  width: 'var(--vf-surface-padding)',
-  height: 'var(--vf-surface-padding)',
+  width: 'var(--cm-space-4)',
+  height: 'var(--cm-space-4)',
   zIndex: '2'
 }
 const arrowShapeStyle = {
   position: 'absolute',
-  inset: 'var(--vf-field-padding-xxs)',
-  background: 'var(--vf-color-surface-muted)',
+  inset: 'var(--cm-space-1)',
+  background: 'var(--cm-color-background-surface-subtle)',
   transform: 'rotate(45deg)'
 }
 
@@ -142,7 +143,7 @@ const update = async () => {
 
     arrowShape.value.style.border = '0'
     visibleBorders[side].forEach((borderSide) => {
-      arrowShape.value.style[borderSide] = '1px solid var(--vf-color-border)'
+      arrowShape.value.style[borderSide] = '1px solid var(--cm-color-border-default)'
     })
   }
 }
@@ -257,7 +258,7 @@ entry: /App.vue
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { computePosition, flip, offset, shift } from '@codemonster-ru/floater.js'
-import { VfButton } from '@codemonster-ru/vueforge-core'
+import { VfButton } from '@codemonster-ru/ui-vue/historical/button'
 
 const getEl = (value) => value?.$el ?? value
 const stage = ref(null)
@@ -269,13 +270,13 @@ const stageStyle = {
   width: '100%',
   height: '100%',
   minHeight: '360px',
-  padding: 'var(--vf-surface-padding)',
+  padding: 'var(--cm-space-4)',
   boxSizing: 'border-box',
   position: 'relative'
 }
 const noteStyle = {
   margin: '0',
-  color: 'var(--vf-color-muted)'
+  color: 'var(--cm-color-text-muted)'
 }
 const menuStyle = {
   position: 'absolute',
@@ -284,11 +285,11 @@ const menuStyle = {
   width: '210px',
   display: 'grid',
   gridTemplateColumns: '1fr',
-  gap: 'var(--vf-field-padding-xs)',
-  padding: 'var(--vf-surface-gap-tight)',
-  border: '1px solid var(--vf-color-border)',
-  borderRadius: 'var(--vf-radius-control)',
-  background: 'var(--vf-color-surface-muted)',
+  gap: 'var(--cm-space-2)',
+  padding: 'var(--cm-space-2)',
+  border: '1px solid var(--cm-color-border-default)',
+  borderRadius: 'var(--cm-radius-control)',
+  background: 'var(--cm-color-background-surface-subtle)',
   overflow: 'hidden',
   zIndex: '1'
 }
@@ -362,7 +363,7 @@ onBeforeUnmount(() => {
   justify-content: flex-start;
   border: 0;
   border-radius: 6px;
-  color: var(--vf-color-text);
+  color: var(--cm-color-text-primary);
   cursor: pointer;
   font: inherit;
 }
@@ -375,7 +376,7 @@ onBeforeUnmount(() => {
 
 .context-menu__item:hover,
 .context-menu__item:focus-visible {
-  background: var(--vf-color-surface);
+  background: var(--cm-color-background-surface);
   outline: none;
 }
 </style>
