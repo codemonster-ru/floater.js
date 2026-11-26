@@ -75,7 +75,8 @@ entry: /App.vue
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { computePosition, offset, shift } from '@codemonster-ru/floater.js'
-import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
+import { VfButton } from '@codemonster-ru/ui-vue/historical/button'
+import { VfCard } from '@codemonster-ru/ui-vue/historical/card'
 
 const getEl = (value) => value?.$el ?? value
 const stage = ref(null)
@@ -99,8 +100,8 @@ const floatingStyle = computed(() => ({
   left: `${coordinates.value.x}px`,
   top: `${coordinates.value.y}px`,
   width: '220px',
-  padding: 'var(--vf-surface-gap-compact) var(--vf-surface-gap)',
-  background: 'var(--vf-color-surface-muted)',
+  padding: 'var(--cm-space-3) var(--cm-space-4)',
+  background: 'var(--cm-color-background-surface-subtle)',
   zIndex: '1'
 }))
 
