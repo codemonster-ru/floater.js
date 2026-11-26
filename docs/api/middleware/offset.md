@@ -65,9 +65,9 @@ entry: /App.vue
         position: 'absolute',
         left: '0',
         top: '0',
-        padding: 'var(--vf-surface-gap-compact) var(--vf-surface-gap)',
-        borderRadius: 'var(--vf-radius-control)',
-        background: 'var(--vf-color-surface-muted)'
+        padding: 'var(--cm-space-3) var(--cm-space-4)',
+        borderRadius: 'var(--cm-radius-control)',
+        background: 'var(--cm-color-background-surface-subtle)'
       }"
     >
       offset: 20px
@@ -78,7 +78,8 @@ entry: /App.vue
 <script setup>
 import { nextTick, onMounted, ref } from 'vue'
 import { computePosition, offset } from '@codemonster-ru/floater.js'
-import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
+import { VfButton } from '@codemonster-ru/ui-vue/historical/button'
+import { VfCard } from '@codemonster-ru/ui-vue/historical/card'
 
 const getEl = (value) => value?.$el ?? value
 const reference = ref(null)
