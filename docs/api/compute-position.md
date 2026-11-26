@@ -63,7 +63,7 @@ entry: /App.vue
     :style="{
       height: '100%',
       minHeight: '250px',
-      padding: 'var(--vf-surface-padding)',
+      padding: 'var(--cm-space-4)',
       boxSizing: 'border-box',
       display: 'grid',
       placeItems: 'center',
@@ -80,7 +80,7 @@ entry: /App.vue
       class="floating"
       :style="floatingStyle"
     >
-      <div :style="{ display: 'grid', gap: 'var(--vf-field-padding-xs)' }">
+      <div :style="{ display: 'grid', gap: 'var(--cm-space-2)' }">
         <span>requested: {{ requestedPlacement }}</span>
         <span>resolved: {{ resolvedPlacement }}</span>
         <span>x: {{ roundedX }}, y: {{ roundedY }}</span>
@@ -92,7 +92,8 @@ entry: /App.vue
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { computePosition, offset } from '@codemonster-ru/floater.js'
-import { VfButton, VfCard } from '@codemonster-ru/vueforge-core'
+import { VfButton } from '@codemonster-ru/ui-vue/historical/button'
+import { VfCard } from '@codemonster-ru/ui-vue/historical/card'
 
 const getEl = (value) => value?.$el ?? value
 const reference = ref(null)
@@ -110,7 +111,7 @@ const floatingStyle = computed(() => ({
   left: `${coordinates.value.x}px`,
   top: `${coordinates.value.y}px`,
   minWidth: '190px',
-  background: 'var(--vf-color-surface-muted)'
+  background: 'var(--cm-color-background-surface-subtle)'
 }))
 
 const update = async () => {
