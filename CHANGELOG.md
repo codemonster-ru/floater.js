@@ -4,6 +4,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.12] - 2026-11-27
+
+### Changed
+
+- Publish from the corrected project history with fresh npm provenance.
+
 ## [1.0.11] - 2026-05-16
 
 ### Added
